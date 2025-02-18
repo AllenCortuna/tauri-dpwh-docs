@@ -167,7 +167,7 @@ const CreateBonds = () => {
 
         <span className="mb-5 ml-auto mr-0 flex flex-row gap-10 justify-start ">
           <Link
-            href={`http://localhost:9527/create/pdf?${new URLSearchParams(data).toString()}`}
+            href={`http://localhost:9527/create-bond/pdf?${new URLSearchParams(data).toString()}`}
             className="btn btn-neutral text-xs w-60"
             target="_blank"
             rel="noopener noreferrer"
