@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  /* border: 1px solid red; */
+}
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 4px; /* Width of the scrollbar */
+  /* height: 4px; */
+}
+
+
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  appearance: textfield;
+}
+
+@font-face {
+  font-family: "MyFont";
+  src: url("/fonts/Tahoma.ttf") format("truetype");
+  font-weight: normal; /* Optional: Specify font weight */
+  font-style: normal; /* Optional: Specify font style */
+}
+
+.tahoma {
+  font-family: "Tahoma", monospace; /* Fallback to sans-serif */
+}
+
+body {
+  color: #27272a;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .custom-input {
+    @apply input input-sm text-xs text-zinc-700 input-bordered bg-white focus:outline-primary focus:border-zinc-100;
+  }
+  .custom-textarea {
+    @apply textarea textarea-bordered w-auto resize-none text-xs bg-zinc-50 focus:outline-primary focus:border-primary;
+  }
+  .primary-text {
+    @apply text-xs text-zinc-500;
+  }
+  .highligth-text {
+    @apply text-xs text-zinc-600 font-semibold;
+  }
+}
