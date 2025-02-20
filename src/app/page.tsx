@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { FaAward, FaFileContract, FaFileAlt, FaGavel, FaHandshake } from 'react-icons/fa'; // Import icons
+import { FaFileAlt, FaGavel, FaHandshake } from 'react-icons/fa'; // Import icons
 
 export default function Home() {
   const menuItems = [
@@ -14,7 +14,7 @@ export default function Home() {
       icon: <FaGavel className="w-6 h-6" />,
       title: "3 Strike Policy",
       subtitle: "Manage compliance warnings",
-      href: "/create-3strike",
+      href: "/create-strike",
     },
     {
       icon: <FaFileAlt className="w-6 h-6" />,
@@ -22,30 +22,30 @@ export default function Home() {
       subtitle: "Create official memos",
       href: "/create-memo",
     },
-    {
-      icon: <FaAward className="w-6 h-6" />,
-      title: "Awards",
-      subtitle: "Issue recognition awards",
-      href: "/create-award",
-    },
-    {
-      icon: <FaFileContract className="w-6 h-6" />,
-      title: "NTP",
-      subtitle: "Notice to Proceed documents",
-      href: "/create-ntp",
-    },
+    // {
+    //   icon: <FaAward className="w-6 h-6" />,
+    //   title: "Awards",
+    //   subtitle: "Issue recognition awards",
+    //   href: "/create-award",
+    // },
+    // {
+    //   icon: <FaFileContract className="w-6 h-6" />,
+    //   title: "NTP",
+    //   subtitle: "Notice to Proceed documents",
+    //   href: "/create-ntp",
+    // },
     {
       icon: <FaHandshake className="w-6 h-6" />,
       title: "Bonds",
       subtitle: "Manage bond certificates",
       href: "/create-bond",
     },
-    {
-      icon: <FaFileContract className="w-6 h-6" />,
-      title: "Obligations",
-      subtitle: "Handle obligation records",
-      href: "/create-oblig",
-    },
+    // {
+    //   icon: <FaFileContract className="w-6 h-6" />,
+    //   title: "Obligations",
+    //   subtitle: "Handle obligation records",
+    //   href: "/create-oblig",
+    // },
   ];
 
   return (

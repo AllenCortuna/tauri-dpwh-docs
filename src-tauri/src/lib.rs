@@ -3,6 +3,7 @@ pub fn run() {
     let port: u16 = 9527;
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_localhost::Builder::new(port).build())
         .setup(|app| {
             if cfg!(debug_assertions) {
