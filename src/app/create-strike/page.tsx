@@ -1,10 +1,10 @@
 "use client";
-import axios from "axios";
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import CreatableSelect from "react-select/creatable";
-import { errorToast, successToast } from "../../../config/toast";
-import BidderTable from "../component/BidderTable";
+import { errorToast } from "../../../config/toast";
+import Database from "@tauri-apps/plugin-sql";
+import Link from "next/link";
 
 interface FormData {
   contractID: string;
@@ -14,13 +14,6 @@ interface FormData {
   category: string;
 }
 
-interface Bidder {
-  name: string;
-  address: string;
-  telNo: string;
-  philReg: string;
-}
-
 interface Option {
   value: string;
   label: string;
@@ -28,7 +21,6 @@ interface Option {
 
 const Create3Strike: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [inputArr, setInputArr] = useState<Bidder[]>([]);
   const [data, setData] = useState<FormData>({
     contractID: "",
     contractName: "",
@@ -42,6 +34,34 @@ const Create3Strike: React.FC = () => {
     { value: "Goods and Services", label: "Goods and Services" },
     { value: "Consultancy", label: "Consultancy" },
   ];
+
+  // Initialize the database and create the table if it doesn't exist
+  const initializeDatabase = async () => {
+    try {
+      const db = await Database.load("sqlite:tauri.db");
+
+      // Create the contracts table if it doesn't exist
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS contracts (
+          contractID TEXT PRIMARY KEY,
+          contractName TEXT,
+          budget TEXT,
+          date TEXT,
+          category TEXT
+        );
+      `);
+
+      console.log("Database initialized and table created (if it didn't exist).");
+    } catch (error) {
+      console.error("Error initializing database:", error);
+      errorToast(`Failed to initialize database: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  // Call initializeDatabase when the component mounts
+  useEffect(() => {
+    initializeDatabase();
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -61,108 +81,56 @@ const Create3Strike: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("data", data);
 
     try {
-      if (Object.values(data).some((value) => value === "") || !inputArr[0]) {
-        errorToast("Hindi kumpleto ang mga input fields!");
-      } else {
-        // strike
-        const strikeResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/create-3strike/strike`,
-          { ...data, bidders: inputArr },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            responseType: "blob",
-          }
+      // Initialize database connection
+      const db = await Database.load("sqlite:tauri.db");
+
+      // Start a transaction
+      await db.execute("BEGIN");
+
+      try {
+        // Insert contract data
+        await db.execute(
+          `INSERT INTO contracts (contractID, contractName, budget, date, category)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            data.contractID,
+            data.contractName,
+            data.budget,
+            data.date,
+            data.category,
+          ]
         );
 
-        if (strikeResponse.status === 200) {
-          const blob = new Blob([strikeResponse.data], {
-            type: strikeResponse.headers["content-type"],
-          });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${data.contractID} STRIKE.docx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          successToast("Certification downloaded successfully");
-        }
+        // Commit the transaction
+        await db.execute("COMMIT");
+        alert("Data saved successfully!");
+        console.log("Data saved successfully!");
 
-        // transmittal
-        const transmittalResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/create-strike/transmittal`,
-          { ...data, bidders: inputArr },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            responseType: "blob",
-          }
-        );
-
-        if (transmittalResponse.status === 200) {
-          const blob = new Blob([transmittalResponse.data], {
-            type: transmittalResponse.headers["content-type"],
-          });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${data.contractID} TRANSMITTAL.docx`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          successToast("Certification downloaded successfully");
-        }
-
-        // individual
-        for (const bidder of inputArr) {
-          const individualResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/create-strike/individual`,
-            { ...data, ...bidder },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              responseType: "blob",
-            }
-          );
-
-          if (individualResponse.status === 200) {
-            const blob = new Blob([individualResponse.data], {
-              type: individualResponse.headers["content-type"],
-            });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${data.contractID} ${bidder.name} STRIKE FORM.docx`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            successToast(`${bidder.name}'s STRIKE FORM downloaded`);
-          }
-        }
+      } catch (error) {
+        // Rollback on error
+        await db.execute("ROLLBACK");
+        console.error("Error saving data:", error);
+        errorToast(`Failed to save data to database: ${error instanceof Error ? error.message : String(error)}`);
       }
-      setIsLoading(false);
+
     } catch (error) {
-      console.log("ERROR: ", error);
-      errorToast(error as string);
+      console.error("Database error:", error);
+      errorToast(`Failed to connect to database: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col w-screen p-10 justify-center">
+    <div className="flex flex-col w-screen p-10 justify-center pb-20">
       <ToastContainer />
       <form className="flex flex-col gap-8 min-w-[60rem] mx-auto">
         <div className="flex gap-10">
           <input
             name="contractID"
-            value={data?.contractID}
+            value={data.contractID}
             onChange={handleChange}
             placeholder="Contract ID"
             className="custom-input w-48"
@@ -170,7 +138,7 @@ const Create3Strike: React.FC = () => {
           />
           <input
             name="contractName"
-            value={data?.contractName}
+            value={data.contractName}
             onChange={handleChange}
             placeholder="Contract Name"
             className="custom-input w-full"
@@ -188,7 +156,7 @@ const Create3Strike: React.FC = () => {
           />
           <input
             name="budget"
-            value={data?.budget}
+            value={data.budget}
             onChange={handleChange}
             placeholder="Budget"
             className="custom-input w-48"
@@ -197,7 +165,7 @@ const Create3Strike: React.FC = () => {
           <span className="tooltip" data-tip="Date of Report">
             <input
               name="date"
-              value={data?.date}
+              value={data.date}
               onChange={handleChange}
               className="custom-input w-40"
               type="date"
@@ -205,7 +173,6 @@ const Create3Strike: React.FC = () => {
           </span>
         </div>
       </form>
-      <BidderTable inputArr={inputArr} setInputArr={setInputArr} />
       <button
         type="submit"
         className={`btn fixed bottom-10 left-1/2 transform -translate-x-1/2 ${
@@ -216,6 +183,12 @@ const Create3Strike: React.FC = () => {
       >
         {isLoading ? "Loading..." : "Download Documents"}
       </button>
+      <Link
+        href={"/create-strike/search"}
+        className="btn btn-neutral text-xs w-80"
+      >
+        Search Contract
+      </Link>
     </div>
   );
 };
