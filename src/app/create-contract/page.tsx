@@ -42,7 +42,7 @@ const CreateContracts: React.FC = () => {
     const initializeDatabase = async () => {
       try {
         // Connect to MySQL instead of SQLite
-        const db = await Database.load("mysql://admin:admin123@localhost:8888/tauri");
+        const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
         console.log("db", db);
         
         // Create the contracts table if it doesn't exist
@@ -127,7 +127,7 @@ const CreateContracts: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8888/tauri");
+      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
 
       for (const contract of contracts) {
         await db.execute(
