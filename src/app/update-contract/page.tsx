@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,7 +38,7 @@ const UpdateContracts: React.FC = () => {
   const fetchContracts = async () => {
     try {
       const db = await Database.load("sqlite:contract.db");
-      const result = await db.select<Contract[]>("SELECT * FROM contract");
+      const result = await db.select<Contract[]>("SELECT * FROM contract LIMIT 100");
       setContracts(result);
     } catch (error) {
       toast.error("Failed to fetch contracts.");
@@ -140,11 +140,11 @@ const UpdateContracts: React.FC = () => {
   };
 
   return (
-    <div className="p-10">
-      <h1 className="text-2xl font-bold mb-5">Update Contracts</h1>
+    <div className="p-10 bg-gray-50 min-h-screen w-full">
+      <h1 className="text-xl font-bold mb-8 text-gray-800">Update Contracts</h1>
 
       {/* Search Bar */}
-      <div className="flex gap-4 mb-5">
+      <div className="flex gap-4 mb-8">
         <select
           value={searchType}
           onChange={(e) =>
@@ -152,7 +152,7 @@ const UpdateContracts: React.FC = () => {
               e.target.value as "batch" | "contractID" | "bidding" | "projectName" | "contractor"
             )
           }
-          className="p-2 border rounded"
+          className="custom-input w-52"
         >
           <option value="batch">Batch</option>
           <option value="contractID">Contract ID</option>
@@ -165,64 +165,66 @@ const UpdateContracts: React.FC = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
-          className="p-2 border rounded flex-grow"
+          className="custom-input w-80"
         />
         <button
           onClick={handleSearch}
-          className="bg-blue-500 text-white p-2 rounded"
+          className="btn btn-sm btn-neutral rounded-none text-white"
         >
           Search
         </button>
       </div>
 
       {/* Contracts Table */}
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Batch</th>
-            <th className="p-2 border">Contract ID</th>
-            <th className="p-2 border">Project Name</th>
-            <th className="p-2 border">Contractor</th>
-            <th className="p-2 border">Bidding</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {contracts.map((contract) => (
-            <tr key={contract.id} className="hover:bg-gray-100">
-              <td className="p-2 border">{contract.batch}</td>
-              <td className="p-2 border">{contract.contractID}</td>
-              <td className="p-2 border">{contract.projectName}</td>
-              <td className="p-2 border">{contract.contractor}</td>
-              <td className="p-2 border">{contract.bidding}</td>
-              <td className="p-2 border">
-                <button
-                  onClick={() => handleEdit(contract)}
-                  className="bg-yellow-500 text-white p-1 rounded"
-                >
-                  Edit
-                </button>
-              </td>
+      <div className="overflow-x-auto text-xs bg-white rounded-lg shadow-sm">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 text-left font-semibold text-gray-700">Batch</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Contract ID</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Project Name</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Contractor</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Bidding</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {contracts.map((contract) => (
+              <tr key={contract.id} className="border-t hover:bg-gray-50 transition duration-200">
+                <td className="p-3 text-gray-700">{contract.batch}</td>
+                <td className="p-3 text-gray-700">{contract.contractID}</td>
+                <td className="p-3 text-gray-700">{contract.projectName}</td>
+                <td className="p-3 text-gray-700">{contract.contractor}</td>
+                <td className="p-3 text-gray-700">{contract.bidding}</td>
+                <td className="p-3">
+                  <button
+                    onClick={() => handleEdit(contract)}
+                    className="btn-outline text-primary rounded-none shadow-md btn-xs btn"
+                  >
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Edit Modal */}
       {isModalOpen && selectedContract && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
-          <div className="bg-white p-5 rounded-lg w-1/2">
-            <h2 className="text-xl font-bold mb-5">Edit Contract</h2>
+          <div className="bg-white p-8 rounded-lg w-11/12 max-w-4xl shadow-xl">
+            <h2 className="text-xl font-bold mb-6 text-gray-800">Edit Contract</h2>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleUpdate(selectedContract);
               }}
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 {/* Batch */}
-                <label>
-                  Batch:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Batch</span>
                   <input
                     type="text"
                     value={selectedContract.batch}
@@ -232,13 +234,13 @@ const UpdateContracts: React.FC = () => {
                         batch: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Posting Date */}
-                <label>
-                  Posting Date:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Posting Date</span>
                   <input
                     type="date"
                     value={selectedContract.posting}
@@ -248,13 +250,13 @@ const UpdateContracts: React.FC = () => {
                         posting: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Pre-Bid Date */}
-                <label>
-                  Pre-Bid Date:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Pre-Bid Date</span>
                   <input
                     type="date"
                     value={selectedContract.preBid}
@@ -264,13 +266,13 @@ const UpdateContracts: React.FC = () => {
                         preBid: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Bidding Date */}
-                <label>
-                  Bidding Date:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Bidding Date</span>
                   <input
                     type="date"
                     value={selectedContract.bidding}
@@ -280,13 +282,13 @@ const UpdateContracts: React.FC = () => {
                         bidding: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Contract ID */}
-                <label>
-                  Contract ID:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Contract ID</span>
                   <input
                     type="text"
                     value={selectedContract.contractID}
@@ -296,13 +298,13 @@ const UpdateContracts: React.FC = () => {
                         contractID: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Project Name */}
-                <label>
-                  Project Name:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Project Name</span>
                   <input
                     type="text"
                     value={selectedContract.projectName}
@@ -312,13 +314,13 @@ const UpdateContracts: React.FC = () => {
                         projectName: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Status */}
-                <label>
-                  Status:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Status</span>
                   <input
                     type="text"
                     value={selectedContract.status}
@@ -328,13 +330,13 @@ const UpdateContracts: React.FC = () => {
                         status: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Contract Amount */}
-                <label>
-                  Contract Amount:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Contract Amount</span>
                   <input
                     type="text"
                     value={selectedContract.contractAmount || ""}
@@ -344,13 +346,13 @@ const UpdateContracts: React.FC = () => {
                         contractAmount: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Contractor */}
-                <label>
-                  Contractor:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Contractor</span>
                   <input
                     type="text"
                     value={selectedContract.contractor || ""}
@@ -360,13 +362,13 @@ const UpdateContracts: React.FC = () => {
                         contractor: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Bid Evaluation Start */}
-                <label>
-                  Bid Evaluation Start:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Bid Evaluation Start</span>
                   <input
                     type="date"
                     value={selectedContract.bidEvalStart || ""}
@@ -376,13 +378,13 @@ const UpdateContracts: React.FC = () => {
                         bidEvalStart: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Bid Evaluation End */}
-                <label>
-                  Bid Evaluation End:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Bid Evaluation End</span>
                   <input
                     type="date"
                     value={selectedContract.bidEvalEnd || ""}
@@ -392,13 +394,13 @@ const UpdateContracts: React.FC = () => {
                         bidEvalEnd: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Post-Qualification Start */}
-                <label>
-                  Post-Qualification Start:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Post-Qualification Start</span>
                   <input
                     type="date"
                     value={selectedContract.postQualStart || ""}
@@ -408,13 +410,13 @@ const UpdateContracts: React.FC = () => {
                         postQualStart: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Post-Qualification End */}
-                <label>
-                  Post-Qualification End:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Post-Qualification End</span>
                   <input
                     type="date"
                     value={selectedContract.postQualEnd || ""}
@@ -424,13 +426,13 @@ const UpdateContracts: React.FC = () => {
                         postQualEnd: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Resolution */}
-                <label>
-                  Resolution:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Resolution</span>
                   <input
                     type="text"
                     value={selectedContract.reso || ""}
@@ -440,13 +442,13 @@ const UpdateContracts: React.FC = () => {
                         reso: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Notice of Award */}
-                <label>
-                  Notice of Award:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Notice of Award</span>
                   <input
                     type="text"
                     value={selectedContract.noa || ""}
@@ -456,13 +458,13 @@ const UpdateContracts: React.FC = () => {
                         noa: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Notice to Proceed */}
-                <label>
-                  Notice to Proceed:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Notice to Proceed</span>
                   <input
                     type="text"
                     value={selectedContract.ntp || ""}
@@ -472,13 +474,13 @@ const UpdateContracts: React.FC = () => {
                         ntp: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* NTP Receive Date */}
-                <label>
-                  NTP Receive Date:
+                <label className="block">
+                  <span className="font-medium text-gray-700">NTP Receive Date</span>
                   <input
                     type="date"
                     value={selectedContract.ntpRecieve || ""}
@@ -488,13 +490,13 @@ const UpdateContracts: React.FC = () => {
                         ntpRecieve: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
 
                 {/* Contract Date */}
-                <label>
-                  Contract Date:
+                <label className="block">
+                  <span className="font-medium text-gray-700">Contract Date</span>
                   <input
                     type="date"
                     value={selectedContract.contractDate || ""}
@@ -504,23 +506,23 @@ const UpdateContracts: React.FC = () => {
                         contractDate: e.target.value,
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex justify-end mt-5">
+              <div className="flex justify-end mt-6">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="bg-gray-500 text-white p-2 rounded mr-2"
+                  className="bg-gray-500 text-white p-2 rounded-lg shadow-md hover:bg-gray-600 transition duration-200 mr-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white p-2 rounded"
+                  className="bg-blue-600 text-white p-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-200"
                 >
                   Save
                 </button>
