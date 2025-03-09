@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { FaFileAlt, FaGavel, FaHandshake } from 'react-icons/fa'; // Import icons
+import { FaAward, FaFileAlt, FaFileContract, FaGavel, FaHandshake } from 'react-icons/fa'; // Import icons
 
 export default function Home() {
   const menuItems = [
@@ -22,18 +22,18 @@ export default function Home() {
       subtitle: "Create official memos",
       href: "/create-memo",
     },
-    // {
-    //   icon: <FaAward className="w-6 h-6" />,
-    //   title: "Awards",
-    //   subtitle: "Issue recognition awards",
-    //   href: "/create-award",
-    // },
-    // {
-    //   icon: <FaFileContract className="w-6 h-6" />,
-    //   title: "NTP",
-    //   subtitle: "Notice to Proceed documents",
-    //   href: "/create-ntp",
-    // },
+    {
+      icon: <FaAward className="w-6 h-6" />,
+      title: "Contract",
+      subtitle: "Create Infrastructure contracts",
+      href: "/create-contract",
+    },
+    {
+      icon: <FaFileContract className="w-6 h-6" />,
+      title: "Update Contract",
+      subtitle: "Update Infrastructure contracts",
+      href: "/update-contract",
+    },
     {
       icon: <FaHandshake className="w-6 h-6" />,
       title: "Bonds",
