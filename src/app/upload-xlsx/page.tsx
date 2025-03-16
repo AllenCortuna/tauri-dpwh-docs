@@ -25,6 +25,26 @@ interface Contract {
   contractDate?: string;
 }
 
+interface ExcelRow {
+  "Batch No.": string;
+  "Posting Date": string;
+  "Pre-Bid Date": string;
+  "Bidding Date": string;
+  "Contract ID": string;
+  "Project Name": string;
+  "Contract Amount"?: string;
+  "Contractor"?: string;
+  "Bid Evaluation Start"?: string;
+  "Bid Evaluation End"?: string;
+  "Post-Qualification Start"?: string;
+  "Post-Qualification End"?: string;
+  "Resolution"?: string;
+  "NOA"?: string;
+  "NTP"?: string;
+  "NTP Received"?: string;
+  "Contract Signed"?: string;
+}
+
 const UploadExcel: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -85,8 +105,8 @@ const UploadExcel: React.FC = () => {
           const workbook = XLSX.read(data, { type: "binary" });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet);
-          const parsedContracts = json.map((row: any) => ({
+          const json = XLSX.utils.sheet_to_json(worksheet) as ExcelRow[]; // Explicit type assertion
+          const parsedContracts = json.map((row) => ({
             batch: row["Batch No."],
             posting: row["Posting Date"],
             preBid: row["Pre-Bid Date"],
