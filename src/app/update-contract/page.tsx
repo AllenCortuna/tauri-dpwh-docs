@@ -37,8 +37,8 @@ const UpdateContracts: React.FC = () => {
   // Fetch all contracts from the database
   const fetchContracts = async () => {
     try {
-      const db = await Database.load("sqlite:contract.db");
-      const result = await db.select<Contract[]>("SELECT * FROM contract LIMIT 100");
+      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      const result = await db.select<Contract[]>("SELECT * FROM contracts LIMIT 100");
       setContracts(result);
     } catch (error) {
       toast.error("Failed to fetch contracts.");
@@ -53,8 +53,8 @@ const UpdateContracts: React.FC = () => {
   // Handle search
   const handleSearch = async () => {
     try {
-      const db = await Database.load("sqlite:contract.db");
-      let query = "SELECT * FROM contract WHERE ";
+      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      let query = "SELECT * FROM contracts WHERE ";
       switch (searchType) {
         case "batch":
           query += `batch LIKE '%${searchQuery}%'`;
@@ -97,9 +97,9 @@ const UpdateContracts: React.FC = () => {
   // Handle form submission to update contract
   const handleUpdate = async (updatedContract: Contract) => {
     try {
-      const db = await Database.load("sqlite:contract.db");
+      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
       await db.execute(
-        `UPDATE contract SET
+        `UPDATE contracts SET
           batch = $1, posting = $2, preBid = $3, bidding = $4,
           contractID = $5, projectName = $6, status = $7,
           contractAmount = $8, contractor = $9, bidEvalStart = $10,

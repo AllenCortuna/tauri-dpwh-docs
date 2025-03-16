@@ -18,9 +18,9 @@ export default function Home() {
     },
     {
       icon: <FaFileAlt className="w-6 h-6" />,
-      title: "PIO Memo",
-      subtitle: "Create official memos",
-      href: "/create-memo",
+      title: "Upload Excel",
+      subtitle: "Upload Excel files",
+      href: "/upload-xlsx",
     },
     {
       icon: <FaAward className="w-6 h-6" />,

@@ -3,8 +3,13 @@ import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import { errorToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
+import * as XLSX from "xlsx";
 
 interface Contract {
+  batch: string;
+  posting: string;
+  preBid: string;
+  bidding: string;
   contractID: string;
   projectName: string;
   contractAmount?: string;
@@ -20,31 +25,20 @@ interface Contract {
   contractDate?: string;
 }
 
-const CreateContracts: React.FC = () => {
+const UploadExcel: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [data, setData] = useState<{
-    batch: string;
-    posting: string;
-    preBid: string;
-    bidding: string;
-  }>({
-    batch: "",
-    posting: "",
-    preBid: "",
-    bidding: "",
-  });
-  const [contracts, setContracts] = useState<Contract[]>([
-    { contractID: "", projectName: "" },
-  ]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
 
   // Initialize the database and create the table if it doesn't exist
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
         // Connect to MySQL instead of SQLite
-        const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+        const db = await Database.load(
+          "mysql://admin:admin123@localhost:8889/tauri"
+        );
         console.log("db", db);
-        
+
         // Create the contracts table if it doesn't exist
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contracts (
@@ -81,53 +75,56 @@ const CreateContracts: React.FC = () => {
     initializeDatabase();
   }, []);
 
-  const handleData = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleContractChange = (
-    index: number,
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    const updatedContracts = contracts.map((contract, i) =>
-      i === index ? { ...contract, [name]: value } : contract
-    );
-    setContracts(updatedContracts);
-  };
-
-  const addContract = () => {
-    setContracts([...contracts, { contractID: "", projectName: "" }]);
-  };
-
-  const removeContract = (index: number) => {
-    setContracts(contracts.filter((_, i) => i !== index));
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = event.target?.result;
+        if (data) {
+          const workbook = XLSX.read(data, { type: "binary" });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet);
+          const parsedContracts = json.map((row: any) => ({
+            batch: row["Batch No."],
+            posting: row["Posting Date"],
+            preBid: row["Pre-Bid Date"],
+            bidding: row["Bidding Date"],
+            contractID: row["Contract ID"],
+            projectName: row["Project Name"],
+            contractAmount: row["Contract Amount"],
+            contractor: row["Contractor"],
+            bidEvalStart: row["Bid Evaluation Start"],
+            bidEvalEnd: row["Bid Evaluation End"],
+            postQualStart: row["Post-Qualification Start"],
+            postQualEnd: row["Post-Qualification End"],
+            reso: row["Resolution"],
+            noa: row["NOA"],
+            ntp: row["NTP"],
+            ntpRecieve: row["NTP Received"],
+            contractDate: row["Contract Signed"],
+          }));
+          setContracts(parsedContracts);
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (Object.values(data).some((value) => value === "")) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    if (
-      contracts.some(
-        (contract) => contract.contractID === "" || contract.projectName === ""
-      )
-    ) {
-      alert("Please fill in all contract fields.");
+    if (contracts.length === 0) {
+      alert("Please upload a file with contracts.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      const db = await Database.load(
+        "mysql://admin:admin123@localhost:8889/tauri"
+      );
 
       for (const contract of contracts) {
         await db.execute(
@@ -137,10 +134,10 @@ const CreateContracts: React.FC = () => {
             postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            data.batch,
-            data.posting,
-            data.preBid,
-            data.bidding,
+            contract.batch, // batch
+            contract.posting, // posting
+            contract.preBid, // preBid
+            contract.bidding, // bidding
             contract.contractID,
             contract.projectName,
             "posted",
@@ -160,13 +157,7 @@ const CreateContracts: React.FC = () => {
         );
       }
 
-      setData({
-        batch: "",
-        posting: "",
-        preBid: "",
-        bidding: "",
-      });
-      setContracts([{ contractID: "", projectName: "" }]);
+      setContracts([]);
       alert("Contracts submitted successfully!");
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -188,85 +179,15 @@ const CreateContracts: React.FC = () => {
       >
         <div className="flex gap-10">
           <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Posting Date:</p>
+            <p className="primary-text ml-1">Upload Excel File:</p>
             <input
-              name="posting"
-              value={data.posting}
-              onChange={handleData}
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
               className="custom-input w-52"
-              type="date"
-            />
-          </span>
-          <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Pre Bid Date:</p>
-            <input
-              name="preBid"
-              value={data.preBid}
-              onChange={handleData}
-              className="custom-input w-52"
-              type="date"
-            />
-          </span>
-          <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Bidding Date:</p>
-            <input
-              name="bidding"
-              value={data.bidding}
-              onChange={handleData}
-              className="custom-input w-52"
-              type="date"
-            />
-          </span>
-          <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Batch NO:</p>
-            <input
-              name="batch"
-              value={data.batch}
-              onChange={handleData}
-              className="custom-input w-52"
-              type="text"
             />
           </span>
         </div>
-
-        {contracts.map((contract, index) => (
-          <div key={index} className="flex gap-10 items-center">
-            <input
-              type="text"
-              autoComplete="off"
-              className="custom-input w-40"
-              name="contractID"
-              value={contract.contractID}
-              onChange={(e) => handleContractChange(index, e)}
-              placeholder="Contract ID"
-            />
-            <input
-              type="text"
-              autoComplete="off"
-              className="custom-input w-full"
-              name="projectName"
-              value={contract.projectName}
-              onChange={(e) => handleContractChange(index, e)}
-              placeholder="Project Name"
-            />
-            <button
-              type="button"
-              className="btn btn-error text-white btn-sm text-xs"
-              onClick={() => removeContract(index)}
-              disabled={contracts.length === 1}
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-
-        <button
-          type="button"
-          className="btn btn-neutral text-xs mt-5 mr-auto ml-0"
-          onClick={addContract}
-        >
-          Add Contract
-        </button>
 
         <button
           type="submit"
@@ -284,4 +205,4 @@ const CreateContracts: React.FC = () => {
   );
 };
 
-export default CreateContracts;
+export default UploadExcel;
