@@ -27,12 +27,14 @@ interface Contract {
   lastUpdated: string;
 }
 
-const UpdateContracts: React.FC = () => {
+const SearchContracts: React.FC = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchType, setSearchType] = useState<"batch" | "contractID" | "bidding" | "projectName" | "contractor">("batch");
+  const [searchType, setSearchType] = useState<
+    "batch" | "contractID" | "bidding" | "projectName" | "contractor"
+  >("batch");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState<boolean>(false);
 
   // Fetch all contracts from the database
   const fetchContracts = async () => {
@@ -55,26 +57,34 @@ const UpdateContracts: React.FC = () => {
     try {
       const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
       let query = "SELECT * FROM contracts WHERE ";
+      const params: string[] = [];
+
       switch (searchType) {
         case "batch":
-          query += `batch LIKE '%${searchQuery}%'`;
+          query += `batch LIKE ?`;
+          params.push(`%${searchQuery}%`);
           break;
         case "contractID":
-          query += `contractID LIKE '%${searchQuery}%'`;
+          query += `contractID LIKE ?`;
+          params.push(`%${searchQuery}%`);
           break;
         case "bidding":
-          query += `bidding LIKE '%${searchQuery}%'`;
+          query += `bidding LIKE ?`;
+          params.push(`%${searchQuery}%`);
           break;
         case "projectName":
-          query += `projectName LIKE '%${searchQuery}%'`;
+          query += `projectName LIKE ?`;
+          params.push(`%${searchQuery}%`);
           break;
         case "contractor":
-          query += `contractor LIKE '%${searchQuery}%'`;
+          query += `contractor LIKE ?`;
+          params.push(`%${searchQuery}%`);
           break;
         default:
           query += `1=1`;
       }
-      const result = await db.select<Contract[]>(query);
+
+      const result = await db.select<Contract[]>(query, params);
       setContracts(result);
     } catch (error) {
       toast.error("Failed to search contracts.");
@@ -82,66 +92,21 @@ const UpdateContracts: React.FC = () => {
     }
   };
 
-  // Handle edit button click
-  const handleEdit = (contract: Contract) => {
+  // Handle view button click
+  const handleView = (contract: Contract) => {
     setSelectedContract(contract);
-    setIsModalOpen(true);
+    setIsViewModalOpen(true);
   };
 
   // Handle modal close
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setIsViewModalOpen(false);
     setSelectedContract(null);
-  };
-
-  // Handle form submission to update contract
-  const handleUpdate = async (updatedContract: Contract) => {
-    try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
-      await db.execute(
-        `UPDATE contracts SET
-          batch = $1, posting = $2, preBid = $3, bidding = $4,
-          contractID = $5, projectName = $6, status = $7,
-          contractAmount = $8, contractor = $9, bidEvalStart = $10,
-          bidEvalEnd = $11, postQualStart = $12, postQualEnd = $13,
-          reso = $14, noa = $15, ntp = $16, ntpRecieve = $17,
-          contractDate = $18, lastUpdated = $19
-        WHERE id = $20`,
-        [
-          updatedContract.batch,
-          updatedContract.posting,
-          updatedContract.preBid,
-          updatedContract.bidding,
-          updatedContract.contractID,
-          updatedContract.projectName,
-          updatedContract.status,
-          updatedContract.contractAmount || null,
-          updatedContract.contractor || null,
-          updatedContract.bidEvalStart || null,
-          updatedContract.bidEvalEnd || null,
-          updatedContract.postQualStart || null,
-          updatedContract.postQualEnd || null,
-          updatedContract.reso || null,
-          updatedContract.noa || null,
-          updatedContract.ntp || null,
-          updatedContract.ntpRecieve || null,
-          updatedContract.contractDate || null,
-          new Date().toISOString(),
-          updatedContract.id,
-        ]
-      );
-      toast.success("Contract updated successfully!");
-      fetchContracts(); // Refresh the list
-      handleCloseModal();
-    } catch (error) {
-      toast.error("Failed to update contract.");
-      console.error(error);
-    }
   };
 
   return (
     <div className="p-10 bg-gray-50 min-h-screen w-full">
-      <h1 className="text-xl font-bold mb-8 text-gray-800">Update Contracts</h1>
+      <h1 className="text-xl font-bold mb-8 text-gray-800">Search Contracts</h1>
 
       {/* Search Bar */}
       <div className="flex gap-4 mb-8">
@@ -190,7 +155,10 @@ const UpdateContracts: React.FC = () => {
           </thead>
           <tbody>
             {contracts.map((contract) => (
-              <tr key={contract.id} className="border-t hover:bg-gray-50 transition duration-200">
+              <tr
+                key={contract.id}
+                className="border-t hover:bg-gray-50 transition duration-200"
+              >
                 <td className="p-3 text-gray-700">{contract.batch}</td>
                 <td className="p-3 text-gray-700">{contract.contractID}</td>
                 <td className="p-3 text-gray-700">{contract.projectName}</td>
@@ -198,10 +166,10 @@ const UpdateContracts: React.FC = () => {
                 <td className="p-3 text-gray-700">{contract.bidding}</td>
                 <td className="p-3">
                   <button
-                    onClick={() => handleEdit(contract)}
+                    onClick={() => handleView(contract)}
                     className="btn-outline text-primary rounded-none shadow-md btn-xs btn"
                   >
-                    Edit
+                    View
                   </button>
                 </td>
               </tr>
@@ -210,324 +178,167 @@ const UpdateContracts: React.FC = () => {
         </table>
       </div>
 
-      {/* Edit Modal */}
-      {isModalOpen && selectedContract && (
+      {/* View Modal */}
+      {isViewModalOpen && selectedContract && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
           <div className="bg-white p-8 rounded-lg w-11/12 max-w-4xl shadow-xl">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">Edit Contract</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdate(selectedContract);
-              }}
-            >
-              <div className="grid grid-cols-2 gap-6">
-                {/* Batch */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Batch</span>
-                  <input
-                    type="text"
-                    value={selectedContract.batch}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        batch: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Posting Date */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Posting Date</span>
-                  <input
-                    type="date"
-                    value={selectedContract.posting}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        posting: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Pre-Bid Date */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Pre-Bid Date</span>
-                  <input
-                    type="date"
-                    value={selectedContract.preBid}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        preBid: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Bidding Date */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Bidding Date</span>
-                  <input
-                    type="date"
-                    value={selectedContract.bidding}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        bidding: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Contract ID */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Contract ID</span>
-                  <input
-                    type="text"
-                    value={selectedContract.contractID}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        contractID: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Project Name */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Project Name</span>
-                  <input
-                    type="text"
-                    value={selectedContract.projectName}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        projectName: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Status */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Status</span>
-                  <input
-                    type="text"
-                    value={selectedContract.status}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        status: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Contract Amount */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Contract Amount</span>
-                  <input
-                    type="text"
-                    value={selectedContract.contractAmount || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        contractAmount: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Contractor */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Contractor</span>
-                  <input
-                    type="text"
-                    value={selectedContract.contractor || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        contractor: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Bid Evaluation Start */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Bid Evaluation Start</span>
-                  <input
-                    type="date"
-                    value={selectedContract.bidEvalStart || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        bidEvalStart: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Bid Evaluation End */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Bid Evaluation End</span>
-                  <input
-                    type="date"
-                    value={selectedContract.bidEvalEnd || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        bidEvalEnd: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Post-Qualification Start */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Post-Qualification Start</span>
-                  <input
-                    type="date"
-                    value={selectedContract.postQualStart || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        postQualStart: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Post-Qualification End */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Post-Qualification End</span>
-                  <input
-                    type="date"
-                    value={selectedContract.postQualEnd || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        postQualEnd: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Resolution */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Resolution</span>
-                  <input
-                    type="text"
-                    value={selectedContract.reso || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        reso: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Notice of Award */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Notice of Award</span>
-                  <input
-                    type="text"
-                    value={selectedContract.noa || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        noa: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Notice to Proceed */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Notice to Proceed</span>
-                  <input
-                    type="text"
-                    value={selectedContract.ntp || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        ntp: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* NTP Receive Date */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">NTP Receive Date</span>
-                  <input
-                    type="date"
-                    value={selectedContract.ntpRecieve || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        ntpRecieve: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
-
-                {/* Contract Date */}
-                <label className="block">
-                  <span className="font-medium text-gray-700">Contract Date</span>
-                  <input
-                    type="date"
-                    value={selectedContract.contractDate || ""}
-                    onChange={(e) =>
-                      setSelectedContract({
-                        ...selectedContract,
-                        contractDate: e.target.value,
-                      })
-                    }
-                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </label>
+            <h2 className="text-xl font-bold mb-6 text-gray-800">View Contract</h2>
+            <div className="grid grid-cols-2 gap-6">
+              {/* Batch */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Batch</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.batch}
+                </p>
               </div>
 
-              {/* Modal Buttons */}
-              <div className="flex justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="bg-gray-500 text-white p-2 rounded-lg shadow-md hover:bg-gray-600 transition duration-200 mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white p-2 rounded-lg shadow-md hover:bg-blue-700 transition duration-200"
-                >
-                  Save
-                </button>
+              {/* Posting Date */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Posting Date</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.posting}
+                </p>
               </div>
-            </form>
+
+              {/* Pre-Bid Date */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Pre-Bid Date</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.preBid}
+                </p>
+              </div>
+
+              {/* Bidding Date */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Bidding Date</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.bidding}
+                </p>
+              </div>
+
+              {/* Contract ID */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Contract ID</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.contractID}
+                </p>
+              </div>
+
+              {/* Project Name */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Project Name</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.projectName}
+                </p>
+              </div>
+
+              {/* Status */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Status</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.status}
+                </p>
+              </div>
+
+              {/* Contract Amount */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Contract Amount</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.contractAmount || "N/A"}
+                </p>
+              </div>
+
+              {/* Contractor */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Contractor</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.contractor || "N/A"}
+                </p>
+              </div>
+
+              {/* Bid Evaluation Start */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Bid Evaluation Start</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.bidEvalStart || "N/A"}
+                </p>
+              </div>
+
+              {/* Bid Evaluation End */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Bid Evaluation End</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.bidEvalEnd || "N/A"}
+                </p>
+              </div>
+
+              {/* Post-Qualification Start */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Post-Qualification Start</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.postQualStart || "N/A"}
+                </p>
+              </div>
+
+              {/* Post-Qualification End */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Post-Qualification End</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.postQualEnd || "N/A"}
+                </p>
+              </div>
+
+              {/* Resolution */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Resolution</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.reso || "N/A"}
+                </p>
+              </div>
+
+              {/* Notice of Award */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Notice of Award</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.noa || "N/A"}
+                </p>
+              </div>
+
+              {/* Notice to Proceed */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Notice to Proceed</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.ntp || "N/A"}
+                </p>
+              </div>
+
+              {/* NTP Receive Date */}
+              <div className="block">
+                <span className="font-medium text-gray-700">NTP Receive Date</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.ntpRecieve || "N/A"}
+                </p>
+              </div>
+
+              {/* Contract Date */}
+              <div className="block">
+                <span className="font-medium text-gray-700">Contract Date</span>
+                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
+                  {selectedContract.contractDate || "N/A"}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex justify-end mt-6">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="bg-gray-500 text-white p-2 rounded-lg shadow-md hover:bg-gray-600 transition duration-200"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -537,4 +348,4 @@ const UpdateContracts: React.FC = () => {
   );
 };
 
-export default UpdateContracts;
+export default SearchContracts;
