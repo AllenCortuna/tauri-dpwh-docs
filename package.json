@@ -12,7 +12,7 @@
   "dependencies": {
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-sql": "^2.2.0",
-    "axios": "^1.7.9",
+    "axios": "^1.8.3",
     "date-fns": "^4.1.0",
     "docxtemplater": "^3.60.1",
     "next": "^15.1.7",
