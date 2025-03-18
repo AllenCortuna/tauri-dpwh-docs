@@ -7,7 +7,8 @@ import {
   FaFileContract, 
   FaPencilAlt,
   FaHandHoldingUsd,
-  FaMoneyCheckAlt
+  FaMoneyCheckAlt,
+  FaReceipt
 } from 'react-icons/fa'; // Import icons
 
 export default function Home() {
@@ -53,6 +54,12 @@ export default function Home() {
       title: "Obligations",
       subtitle: "Handle obligation records",
       href: "/create-oblig",
+    },
+    {
+      icon: <FaReceipt className="w-6 h-6" />,
+      title: "Bid Receipt",
+      subtitle: "Create bid receipts",
+      href: "/create-bid-receipt",
     },
   ];
 
