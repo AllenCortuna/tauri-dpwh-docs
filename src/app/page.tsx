@@ -1,51 +1,59 @@
 "use client";
 import Link from "next/link";
-import { FaAward, FaFileAlt, FaFileContract, FaGavel, FaHandshake } from 'react-icons/fa'; // Import icons
+import { 
+  FaCertificate, 
+  FaExclamationTriangle, 
+  FaFileExcel, 
+  FaFileContract, 
+  FaPencilAlt,
+  FaHandHoldingUsd,
+  FaMoneyCheckAlt
+} from 'react-icons/fa'; // Import icons
 
 export default function Home() {
   const menuItems = [
     {
-      icon: <FaFileAlt className="w-6 h-6" />,
+      icon: <FaCertificate className="w-6 h-6" />,
       title: "PIO Certification",
       subtitle: "Generate certification documents",
       href: "/create-pio-cert",
     },
     {
-      icon: <FaGavel className="w-6 h-6" />,
+      icon: <FaExclamationTriangle className="w-6 h-6" />,
       title: "3 Strike Policy",
       subtitle: "Manage compliance warnings",
       href: "/create-strike",
     },
     {
-      icon: <FaFileAlt className="w-6 h-6" />,
+      icon: <FaFileExcel className="w-6 h-6" />,
       title: "Upload Excel",
       subtitle: "Upload Excel files",
       href: "/upload-xlsx",
     },
     {
-      icon: <FaAward className="w-6 h-6" />,
+      icon: <FaFileContract className="w-6 h-6" />,
       title: "Contract",
       subtitle: "Create Infrastructure contracts",
       href: "/create-contract",
     },
     {
-      icon: <FaFileContract className="w-6 h-6" />,
+      icon: <FaPencilAlt className="w-6 h-6" />,
       title: "Update Contract",
       subtitle: "Update Infrastructure contracts",
       href: "/update-contract",
     },
     {
-      icon: <FaHandshake className="w-6 h-6" />,
+      icon: <FaHandHoldingUsd className="w-6 h-6" />,
       title: "Bonds",
       subtitle: "Manage bond certificates",
       href: "/create-bond",
     },
-    // {
-    //   icon: <FaFileContract className="w-6 h-6" />,
-    //   title: "Obligations",
-    //   subtitle: "Handle obligation records",
-    //   href: "/create-oblig",
-    // },
+    {
+      icon: <FaMoneyCheckAlt className="w-6 h-6" />,
+      title: "Obligations",
+      subtitle: "Handle obligation records",
+      href: "/create-oblig",
+    },
   ];
 
   return (
