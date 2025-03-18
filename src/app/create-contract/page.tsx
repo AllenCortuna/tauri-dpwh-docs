@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
-import { errorToast } from "../../../config/toast";
+import { errorToast, successToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
 
 interface Contract {
@@ -41,33 +41,32 @@ const CreateContracts: React.FC = () => {
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
-        // Connect to MySQL instead of SQLite
-        const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
-        console.log("db", db);
+        // Connect to SQLite instead of MySQL
+        const db = await Database.load("sqlite:tauri.db");
         
         // Create the contracts table if it doesn't exist
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contracts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            batch VARCHAR(255) NOT NULL,
-            posting VARCHAR(255) NOT NULL,
-            preBid VARCHAR(255) NOT NULL,
-            bidding VARCHAR(255) NOT NULL,
-            contractID VARCHAR(255) NOT NULL UNIQUE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch TEXT NOT NULL,
+            posting TEXT NOT NULL,
+            preBid TEXT NOT NULL,
+            bidding TEXT NOT NULL,
+            contractID TEXT NOT NULL UNIQUE,
             projectName TEXT NOT NULL,
-            status VARCHAR(255) NOT NULL,
-            contractAmount VARCHAR(255),
-            contractor VARCHAR(255),
-            bidEvalStart VARCHAR(255),
-            bidEvalEnd VARCHAR(255),
-            postQualStart VARCHAR(255),
-            postQualEnd VARCHAR(255),
-            reso VARCHAR(255),
-            noa VARCHAR(255),
-            ntp VARCHAR(255),
-            ntpRecieve VARCHAR(255),
-            contractDate VARCHAR(255),
-            lastUpdated VARCHAR(255) NOT NULL
+            status TEXT NOT NULL,
+            contractAmount TEXT,
+            contractor TEXT,
+            bidEvalStart TEXT,
+            bidEvalEnd TEXT,
+            postQualStart TEXT,
+            postQualEnd TEXT,
+            reso TEXT,
+            noa TEXT,
+            ntp TEXT,
+            ntpRecieve TEXT,
+            contractDate TEXT,
+            lastUpdated TEXT NOT NULL
           );
         `);
 
@@ -112,7 +111,7 @@ const CreateContracts: React.FC = () => {
     e.preventDefault();
 
     if (Object.values(data).some((value) => value === "")) {
-      alert("Please fill in all fields.");
+      errorToast("Please fill in all fields.");
       return;
     }
 
@@ -121,13 +120,13 @@ const CreateContracts: React.FC = () => {
         (contract) => contract.contractID === "" || contract.projectName === ""
       )
     ) {
-      alert("Please fill in all contract fields.");
+      errorToast("Please fill in all contract fields.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      const db = await Database.load("sqlite:tauri.db");
 
       for (const contract of contracts) {
         await db.execute(
@@ -167,7 +166,7 @@ const CreateContracts: React.FC = () => {
         bidding: "",
       });
       setContracts([{ contractID: "", projectName: "" }]);
-      alert("Contracts submitted successfully!");
+      successToast("Contracts submitted successfully!");
     } catch (error: unknown) {
       if (error instanceof Error) {
         errorToast(error.message);

@@ -1,26 +1,28 @@
 "use client";
 import Link from "next/link";
 import { 
-  FaCertificate, 
-  FaExclamationTriangle, 
+  FaStamp, 
+  FaExclamationCircle, 
   FaFileExcel, 
-  FaFileContract, 
-  FaPencilAlt,
-  FaHandHoldingUsd,
-  FaMoneyCheckAlt,
-  FaReceipt
+  FaFileSignature, 
+  FaEdit,
+  FaShieldAlt,
+  FaMoneyBill,
+  FaReceipt,
+  FaUsers,
+  FaDatabase
 } from 'react-icons/fa'; // Import icons
 
 export default function Home() {
   const menuItems = [
     {
-      icon: <FaCertificate className="w-6 h-6" />,
+      icon: <FaStamp className="w-6 h-6" />,
       title: "PIO Certification",
       subtitle: "Generate certification documents",
       href: "/create-pio-cert",
     },
     {
-      icon: <FaExclamationTriangle className="w-6 h-6" />,
+      icon: <FaExclamationCircle className="w-6 h-6" />,
       title: "3 Strike Policy",
       subtitle: "Manage compliance warnings",
       href: "/create-strike",
@@ -32,25 +34,25 @@ export default function Home() {
       href: "/upload-xlsx",
     },
     {
-      icon: <FaFileContract className="w-6 h-6" />,
+      icon: <FaFileSignature className="w-6 h-6" />,
       title: "Contract",
       subtitle: "Create Infrastructure contracts",
       href: "/create-contract",
     },
     {
-      icon: <FaPencilAlt className="w-6 h-6" />,
+      icon: <FaEdit className="w-6 h-6" />,
       title: "Update Contract",
       subtitle: "Update Infrastructure contracts",
       href: "/update-contract",
     },
     {
-      icon: <FaHandHoldingUsd className="w-6 h-6" />,
+      icon: <FaShieldAlt className="w-6 h-6" />,
       title: "Bonds",
       subtitle: "Manage bond certificates",
       href: "/create-bond",
     },
     {
-      icon: <FaMoneyCheckAlt className="w-6 h-6" />,
+      icon: <FaMoneyBill className="w-6 h-6" />,
       title: "Obligations",
       subtitle: "Handle obligation records",
       href: "/create-oblig",
@@ -60,6 +62,20 @@ export default function Home() {
       title: "Bid Receipt",
       subtitle: "Create bid receipts",
       href: "/create-bid-receipt",
+    },
+    //contractors
+    {
+      icon: <FaUsers className="w-6 h-6" />,
+      title: "Contractors",
+      subtitle: "Manage contractor records",
+      href: "/contractors",
+    },
+    //sql
+    {
+      icon: <FaDatabase className="w-6 h-6" />,
+      title: "Database",
+      subtitle: "Manage SQL queries and backup",
+      href: "/sqlite",
     },
   ];
 

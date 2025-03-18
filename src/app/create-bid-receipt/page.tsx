@@ -1,10 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
 import { formatDate } from "../../../config/convertToDate";
+import Database from "@tauri-apps/plugin-sql";
 
 interface FormData {
   contractID: string;
@@ -15,6 +16,22 @@ interface FormData {
   representativeDesignation: string;
   contractor: string;
   address: string;
+}
+
+interface Contractor {
+  id: number;
+  contractorName: string;
+  email: string;
+  amo: string;
+  tin: string;
+  address: string;
+}
+
+interface Contract {
+  id: number;
+  contractID: string;
+  projectName: string;
+  batch: string;
 }
 
 const CreateBidReceipt = () => {
@@ -29,6 +46,65 @@ const CreateBidReceipt = () => {
     contractor: "",
     address: "",
   });
+  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [filteredContractors, setFilteredContractors] = useState<Contractor[]>([]);
+  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
+  const [showContractorDropdown, setShowContractorDropdown] = useState(false);
+  const [showContractDropdown, setShowContractDropdown] = useState(false);
+  const contractorDropdownRef = useRef<HTMLDivElement>(null);
+  const contractDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch contractors and contracts from database on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const db = await Database.load("sqlite:tauri.db");
+        
+        // Fetch contractors
+        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
+        setContractors(contractorsResult);
+        
+        // Fetch contracts
+        const contractsResult = await db.select<Contract[]>(
+          "SELECT id, contractID, projectName, batch FROM contracts"
+        );
+        setContracts(contractsResult);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Handle click outside contractor dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contractorDropdownRef.current && !contractorDropdownRef.current.contains(event.target as Node)) {
+        setShowContractorDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle click outside contract dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contractDropdownRef.current && !contractDropdownRef.current.contains(event.target as Node)) {
+        setShowContractDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,6 +112,56 @@ const CreateBidReceipt = () => {
       ...prevData,
       [name]: value,
     }));
+
+    // Filter contractors when typing in contractor field
+    if (name === "contractor") {
+      if (value.trim() === "") {
+        setFilteredContractors([]);
+        setShowContractorDropdown(false);
+      } else {
+        const regex = new RegExp(value, "i");
+        const filtered = contractors.filter(c => 
+          regex.test(c.contractorName)
+        );
+        setFilteredContractors(filtered);
+        setShowContractorDropdown(true);
+      }
+    }
+    
+    // Filter contracts when typing in contractID field
+    if (name === "contractID") {
+      if (value.trim() === "") {
+        setFilteredContracts([]);
+        setShowContractDropdown(false);
+      } else {
+        const regex = new RegExp(value, "i");
+        const filtered = contracts.filter(c => 
+          regex.test(c.contractID)
+        );
+        setFilteredContracts(filtered);
+        setShowContractDropdown(true);
+      }
+    }
+  };
+
+  const handleContractorSelect = (contractor: Contractor) => {
+    setData(prevData => ({
+      ...prevData,
+      contractor: contractor.contractorName,
+      representative: contractor.amo || "",
+      representativeDesignation: "Authorized Managing Officer", // Default designation
+      address: contractor.address || ""
+    }));
+    setShowContractorDropdown(false);
+  };
+  
+  const handleContractSelect = (contract: Contract) => {
+    setData(prevData => ({
+      ...prevData,
+      contractID: contract.contractID,
+      projectName: contract.projectName
+    }));
+    setShowContractDropdown(false);
   };
 
   interface DocumentData {
@@ -132,22 +258,62 @@ const CreateBidReceipt = () => {
     <div className="flex flex-col w-screen p-10 justify-center">
       <ToastContainer />
       <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 min-w-[60rem] mx-auto">
-        <input
-          name="contractID"
-          value={data.contractID}
-          onChange={handleChange}
-          placeholder="Contract ID"
-          className="custom-input"
-          type="text"
-        />
-        <input
-          name="contractor"
-          value={data.contractor}
-          onChange={handleChange}
-          placeholder="Contractor"
-          className="custom-input col-span-2"
-          type="text"
-        />
+        <div className="relative">
+          <input
+            name="contractID"
+            value={data.contractID}
+            onChange={handleChange}
+            placeholder="Contract ID"
+            className="custom-input"
+            type="text"
+            autoComplete="off"
+          />
+          {showContractDropdown && filteredContracts.length > 0 && (
+            <div 
+              ref={contractDropdownRef}
+              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              {filteredContracts.map((contract) => (
+                <div
+                  key={contract.id}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => handleContractSelect(contract)}
+                >
+                  <div className="font-medium">{contract.contractID}</div>
+                  <div className="text-xs text-gray-500 truncate">{contract.projectName}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="relative col-span-2">
+          <input
+            name="contractor"
+            value={data.contractor}
+            onChange={handleChange}
+            placeholder="Contractor"
+            className="custom-input w-full"
+            type="text"
+            autoComplete="off"
+          />
+          {showContractorDropdown && filteredContractors.length > 0 && (
+            <div 
+              ref={contractorDropdownRef}
+              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              {filteredContractors.map((contractor) => (
+                <div
+                  key={contractor.id}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => handleContractorSelect(contractor)}
+                >
+                  <div className="font-medium">{contractor.contractorName}</div>
+                  <div className="text-xs text-gray-500">{contractor.address}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           name="projectName"
           value={data.projectName}

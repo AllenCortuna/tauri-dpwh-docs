@@ -39,7 +39,8 @@ const SearchContracts: React.FC = () => {
   // Fetch all contracts from the database
   const fetchContracts = async () => {
     try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      // Changed from MySQL to SQLite connection
+      const db = await Database.load("sqlite:tauri.db");
       const result = await db.select<Contract[]>("SELECT * FROM contracts LIMIT 100");
       setContracts(result);
     } catch (error) {
@@ -55,7 +56,8 @@ const SearchContracts: React.FC = () => {
   // Handle search
   const handleSearch = async () => {
     try {
-      const db = await Database.load("mysql://admin:admin123@localhost:8889/tauri");
+      // Changed from MySQL to SQLite connection
+      const db = await Database.load("sqlite:tauri.db");
       let query = "SELECT * FROM contracts WHERE ";
       const params: string[] = [];
 

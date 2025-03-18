@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
-import { errorToast } from "../../../config/toast";
+import { errorToast, successToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
 
@@ -52,33 +52,30 @@ const UploadExcel: React.FC = () => {
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
-        const db = await Database.load(
-          "mysql://admin:admin123@localhost:8889/tauri"
-        );
-        console.log("db", db);
+        const db = await Database.load("sqlite:tauri.db");
 
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contracts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            batch VARCHAR(255) NOT NULL,
-            posting VARCHAR(255) NOT NULL,
-            preBid VARCHAR(255) NOT NULL,
-            bidding VARCHAR(255) NOT NULL,
-            contractID VARCHAR(255) NOT NULL UNIQUE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch TEXT NOT NULL,
+            posting TEXT NOT NULL,
+            preBid TEXT NOT NULL,
+            bidding TEXT NOT NULL,
+            contractID TEXT NOT NULL UNIQUE,
             projectName TEXT NOT NULL,
-            status VARCHAR(255) NOT NULL,
-            contractAmount VARCHAR(255),
-            contractor VARCHAR(255),
-            bidEvalStart VARCHAR(255),
-            bidEvalEnd VARCHAR(255),
-            postQualStart VARCHAR(255),
-            postQualEnd VARCHAR(255),
-            reso VARCHAR(255),
-            noa VARCHAR(255),
-            ntp VARCHAR(255),
-            ntpRecieve VARCHAR(255),
-            contractDate VARCHAR(255),
-            lastUpdated VARCHAR(255) NOT NULL
+            status TEXT NOT NULL,
+            contractAmount TEXT,
+            contractor TEXT,
+            bidEvalStart TEXT,
+            bidEvalEnd TEXT,
+            postQualStart TEXT,
+            postQualEnd TEXT,
+            reso TEXT,
+            noa TEXT,
+            ntp TEXT,
+            ntpRecieve TEXT,
+            contractDate TEXT,
+            lastUpdated TEXT NOT NULL
           );
         `);
 
@@ -133,15 +130,13 @@ const UploadExcel: React.FC = () => {
     e.preventDefault();
 
     if (contracts.length === 0) {
-      alert("Please upload a file with contracts.");
+      errorToast("Please upload a file with contracts.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const db = await Database.load(
-        "mysql://admin:admin123@localhost:8889/tauri"
-      );
+      const db = await Database.load("sqlite:tauri.db");
 
       for (const contract of contracts) {
         await db.execute(
@@ -175,7 +170,7 @@ const UploadExcel: React.FC = () => {
       }
 
       setContracts([]);
-      alert("Contracts submitted successfully!");
+      successToast("Contracts submitted successfully!");
     } catch (error: unknown) {
       if (error instanceof Error) {
         errorToast(error.message);
@@ -191,7 +186,7 @@ const UploadExcel: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <form
-        className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8 space-y-6"
+        className="w-full max-w-4xl bg-white border border-dashed border-zinc-400 bg-opacity-20 rounded-lg shadow-md p-8 space-y-6"
         onSubmit={handleSubmit}
       >
         <h1 className="text-2xl font-bold text-gray-800 text-center">
