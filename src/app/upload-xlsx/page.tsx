@@ -49,17 +49,14 @@ const UploadExcel: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
 
-  // Initialize the database and create the table if it doesn't exist
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
-        // Connect to MySQL instead of SQLite
         const db = await Database.load(
           "mysql://admin:admin123@localhost:8889/tauri"
         );
         console.log("db", db);
 
-        // Create the contracts table if it doesn't exist
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contracts (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -105,7 +102,7 @@ const UploadExcel: React.FC = () => {
           const workbook = XLSX.read(data, { type: "binary" });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet) as ExcelRow[]; // Explicit type assertion
+          const json = XLSX.utils.sheet_to_json(worksheet) as ExcelRow[];
           const parsedContracts = json.map((row) => ({
             batch: row["Batch No."],
             posting: row["Posting Date"],
@@ -154,10 +151,10 @@ const UploadExcel: React.FC = () => {
             postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            contract.batch, // batch
-            contract.posting, // posting
-            contract.preBid, // preBid
-            contract.bidding, // bidding
+            contract.batch,
+            contract.posting,
+            contract.preBid,
+            contract.bidding,
             contract.contractID,
             contract.projectName,
             "posted",
@@ -192,28 +189,34 @@ const UploadExcel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-screen p-10 justify-center">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <form
-        className="flex flex-col gap-8 min-w-[60rem] mx-auto mt-20"
+        className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8 space-y-6"
         onSubmit={handleSubmit}
       >
-        <div className="flex gap-10">
-          <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Upload Excel File:</p>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              className="custom-input w-52"
-            />
-          </span>
+        <h1 className="text-2xl font-bold text-gray-800 text-center">
+          Upload Contracts
+        </h1>
+
+        <div className="flex flex-col space-y-4">
+          <label className="text-sm font-medium text-gray-700">
+            Upload Excel File:
+          </label>
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
         </div>
 
         <button
           type="submit"
-          className={`btn ${
-            isLoading ? "btn-disable" : "btn-neutral"
-          } text-xs mt-10 w-52 mx-auto fixed bottom-5 right-5`}
+          className={`w-full py-2 px-4 rounded-md text-white font-semibold ${
+            isLoading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } transition duration-200`}
           disabled={isLoading}
         >
           {isLoading ? "Loading..." : "Submit Contracts"}
