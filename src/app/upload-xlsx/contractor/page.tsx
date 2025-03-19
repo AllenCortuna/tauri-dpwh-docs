@@ -19,7 +19,7 @@ interface ExcelRow {
   "email": string;
   "address": string;
   "amo": string;
-  "designation" : string;
+  "designation": string;
   "tin": string;
   "contractorName": string;
 }
@@ -67,16 +67,39 @@ const UploadContractor: React.FC = () => {
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const json = XLSX.utils.sheet_to_json(worksheet) as ExcelRow[];
-          const parsedContractors = json.map((row) => ({
-            email: row["email"],
-            address: row["address"],
-            amo: row["amo"],
-            designation: row["designation"],
-            tin: row["tin"],
-            contractorName: row["contractorName"],
-            lastUpdated: new Date().toISOString(),
-          }));
-          setContractors(parsedContractors);
+          
+          // Process and merge duplicate contractors
+          const contractorMap = new Map<string, Contractor>();
+          
+          json.forEach((row) => {
+            const email = row["email"];
+            if (contractorMap.has(email)) {
+              // Merge data if contractor already exists
+              const existing = contractorMap.get(email)!;
+              contractorMap.set(email, {
+                email,
+                address: row["address"] || existing.address,
+                amo: row["amo"] || existing.amo,
+                designation: row["designation"] || existing.designation,
+                tin: row["tin"] || existing.tin,
+                contractorName: row["contractorName"] || existing.contractorName,
+                lastUpdated: new Date().toISOString(),
+              });
+            } else {
+              // Add new contractor
+              contractorMap.set(email, {
+                email,
+                address: row["address"],
+                amo: row["amo"],
+                designation: row["designation"],
+                tin: row["tin"],
+                contractorName: row["contractorName"],
+                lastUpdated: new Date().toISOString(),
+              });
+            }
+          });
+
+          setContractors(Array.from(contractorMap.values()));
         }
       };
       reader.readAsBinaryString(file);
@@ -103,7 +126,8 @@ const UploadContractor: React.FC = () => {
         );
 
         if ((existingContractor as Contractor[]).length > 0) {
-          // Update existing contractor
+          const existing = (existingContractor as [Contractor])[0] as Contractor;
+          // Update existing contractor with merged data
           await db.execute(
             `UPDATE contractors SET 
               address = ?, 
@@ -114,11 +138,11 @@ const UploadContractor: React.FC = () => {
               lastUpdated = ?
             WHERE email = ?`,
             [
-              contractor.address,
-              contractor.amo || null,
-              contractor.designation || null,
-              contractor.tin || null,
-              contractor.contractorName,
+              contractor.address || existing.address,
+              contractor.amo || existing.amo,
+              contractor.designation || existing.designation,
+              contractor.tin || existing.tin,
+              contractor.contractorName || existing.contractorName,
               contractor.lastUpdated,
               contractor.email,
             ]
@@ -128,7 +152,7 @@ const UploadContractor: React.FC = () => {
           await db.execute(
             `INSERT INTO contractors (
               email, address, amo, designation, tin, contractorName, lastUpdated
-            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               contractor.email,
               contractor.address,
@@ -136,7 +160,7 @@ const UploadContractor: React.FC = () => {
               contractor.designation || null,
               contractor.tin || null,
               contractor.contractorName,
-              contractor.lastUpdated,
+              new Date().toISOString(),
             ]
           );
         }
@@ -174,7 +198,7 @@ const UploadContractor: React.FC = () => {
             type="file"
             accept=".xlsx, .xls"
             onChange={handleFileUpload}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-none file:text-sm file:font-semibold file:bg-neutral file:text-white hover:file:bg-amber-600"
           />
         </div>
 
@@ -183,7 +207,7 @@ const UploadContractor: React.FC = () => {
           className={`w-full py-2 px-4 rounded-md text-white font-semibold ${
             isLoading
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
+              : "bg-neutral hover:bg-black"
           } transition duration-200`}
           disabled={isLoading}
         >
