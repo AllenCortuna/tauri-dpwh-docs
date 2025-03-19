@@ -23,6 +23,7 @@ interface Contractor {
   contractorName: string;
   email: string;
   amo: string;
+  designation: string;
   tin: string;
   address: string;
 }
@@ -149,7 +150,7 @@ const CreateBidReceipt = () => {
       ...prevData,
       contractor: contractor.contractorName,
       representative: contractor.amo || "",
-      representativeDesignation: "Authorized Managing Officer", // Default designation
+      representativeDesignation: contractor.designation || "", // Default designation
       address: contractor.address || ""
     }));
     setShowContractorDropdown(false);

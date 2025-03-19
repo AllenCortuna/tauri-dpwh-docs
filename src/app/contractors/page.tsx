@@ -95,13 +95,14 @@ const CreateContractors: React.FC = () => {
       for (const contractor of contractors) {
         await db.execute(
           `INSERT INTO contractors (
-            contractorName, address, email, amo, tin, lastUpdated
+            contractorName, address, email, amo, designation, tin, lastUpdated
           ) VALUES (?, ?, ?, ?, ?, ?)`,
           [
             contractor.contractorName,
             contractor.address,
             contractor.email,
             contractor.amo,
+            contractor.designation,
             contractor.tin,
             new Date().toISOString(),
           ]

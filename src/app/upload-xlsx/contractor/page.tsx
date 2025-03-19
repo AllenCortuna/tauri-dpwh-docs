@@ -9,6 +9,7 @@ interface Contractor {
   email: string;
   address: string;
   amo: string;
+  designation: string;
   lastUpdated: string;
   tin: string;
   contractorName: string;
@@ -18,6 +19,7 @@ interface ExcelRow {
   "email": string;
   "address": string;
   "amo": string;
+  "designation" : string;
   "tin": string;
   "contractorName": string;
 }
@@ -37,6 +39,7 @@ const UploadContractor: React.FC = () => {
             email TEXT NOT NULL UNIQUE,
             address TEXT NOT NULL,
             amo TEXT,
+            designation TEXT,
             tin TEXT,
             contractorName TEXT NOT NULL,
             lastUpdated TEXT NOT NULL
@@ -68,6 +71,7 @@ const UploadContractor: React.FC = () => {
             email: row["email"],
             address: row["address"],
             amo: row["amo"],
+            designation: row["designation"],
             tin: row["tin"],
             contractorName: row["contractorName"],
             lastUpdated: new Date().toISOString(),
@@ -104,6 +108,7 @@ const UploadContractor: React.FC = () => {
             `UPDATE contractors SET 
               address = ?, 
               amo = ?, 
+              designation = ?,
               tin = ?, 
               contractorName = ?, 
               lastUpdated = ?
@@ -111,6 +116,7 @@ const UploadContractor: React.FC = () => {
             [
               contractor.address,
               contractor.amo || null,
+              contractor.designation || null,
               contractor.tin || null,
               contractor.contractorName,
               contractor.lastUpdated,
@@ -121,12 +127,13 @@ const UploadContractor: React.FC = () => {
           // Insert new contractor
           await db.execute(
             `INSERT INTO contractors (
-              email, address, amo, tin, contractorName, lastUpdated
+              email, address, amo, designation, tin, contractorName, lastUpdated
             ) VALUES (?, ?, ?, ?, ?, ?)`,
             [
               contractor.email,
               contractor.address,
               contractor.amo || null,
+              contractor.designation || null,
               contractor.tin || null,
               contractor.contractorName,
               contractor.lastUpdated,
