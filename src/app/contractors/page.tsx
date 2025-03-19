@@ -31,20 +31,21 @@ const CreateContractors: React.FC = () => {
     const initializeDatabase = async () => {
       try {
         const db = await Database.load("sqlite:tauri.db");
-        
+
         // Create the contractors table if it doesn't exist
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contractors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             contractorName TEXT NOT NULL,
             address TEXT NOT NULL,
-            email TEXT NOT NULL,
-            amo TEXT NOT NULL,
-            tin TEXT NOT NULL,
+            email TEXT,
+            amo TEXT,
+            designation TEXT,
+            tin TEXT,
             lastUpdated TEXT NOT NULL
           );
         `);
-        
+
         console.log("Database and contractors table initialized successfully.");
       } catch (error) {
         console.error("Failed to initialize database:", error);
@@ -90,7 +91,7 @@ const CreateContractors: React.FC = () => {
     setIsLoading(true);
     try {
       const db = await Database.load("sqlite:tauri.db");
-      
+
       for (const contractor of contractors) {
         await db.execute(
           `INSERT INTO contractors (
@@ -132,108 +133,113 @@ const CreateContractors: React.FC = () => {
 
   return (
     <div className="flex flex-col w-screen p-10 justify-center">
- 
-        <form
-          className="flex flex-col gap-8 min-w-[60rem] mx-auto mt-20"
-          onSubmit={handleSubmit}
-        >
-          <div className="flex gap-4 mb-4">
-            <button
-              type="button"
-              className="btn btn-outline text-neutral text-xs"
-              onClick={addContractor}
-            >
-              Add Another Contractor
-            </button>
-            <Link
-              type="button"
-              className="btn btn-outline text-neutral text-xs"
-              href="/contractors/search"
-            >
-             Contractor List
-            </Link>
+      <form
+        className="flex flex-col gap-8 min-w-[60rem] mx-auto mt-20"
+        onSubmit={handleSubmit}
+      >
+        <div className="flex gap-4 mb-4">
+          <button
+            type="button"
+            className="btn btn-outline text-neutral text-xs"
+            onClick={addContractor}
+          >
+            Add Another Contractor
+          </button>
+          <Link
+            type="button"
+            className="btn btn-outline text-neutral text-xs"
+            href="/contractors/search"
+          >
+            Contractor List
+          </Link>
 
-            <button
-              type="submit"
-              className={`btn ${
-                isLoading ? "btn-disable" : "btn-neutral"
-              } text-xs`}
-              disabled={isLoading}
-            >
-              {isLoading ? "Submitting..." : "Submit Contractors"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className={`btn ${
+              isLoading ? "btn-disable" : "btn-neutral"
+            } text-xs`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Submitting..." : "Submit Contractors"}
+          </button>
+        </div>
 
-
-          <div className="grid grid-cols-2 gap-4">
-            {[...contractors].reverse().map((contractor, index) => {
-              const originalIndex = contractors.length - 1 - index;
-              return (
-                <div
-                  key={originalIndex}
-                  className="flex flex-col gap-4 border p-4 rounded-none bg-white"
-                >
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-neutral font-semibold">
-                      Contractor {originalIndex + 1}
-                    </h3>
-                    {contractors.length > 1 && (
-                      <button
-                        type="button"
-                        className="btn btn-error btn-xs text-white"
-                        onClick={() => removeContractor(originalIndex)}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <input
-                    name="contractorName"
-                    value={contractor.contractorName.toUpperCase()}
-                    onChange={(e) => handleContractorChange(originalIndex, e)}
-                    className="custom-input w-full"
-                    type="text"
-                    placeholder="Contractor Name"
-                  />
-                  <input
-                    name="address"
-                    value={contractor.address}
-                    onChange={(e) => handleContractorChange(originalIndex, e)}
-                    className="custom-input w-full"
-                    type="text"
-                    placeholder="Address"
-                  />
-                  <input
-                    name="email"
-                    value={contractor.email}
-                    onChange={(e) => handleContractorChange(originalIndex, e)}
-                    className="custom-input w-full"
-                    type="email"
-                    placeholder="Email Address"
-                  />
-                  <input
-                    name="tin"
-                    value={contractor.tin}
-                    onChange={(e) => handleContractorChange(originalIndex, e)}
-                    className="custom-input w-full"
-                    type="text"
-                    placeholder="TIN Number"
-                  />
-                  <input
-                    name="amo"
-                    value={contractor.amo}
-                    onChange={(e) => handleContractorChange(originalIndex, e)}
-                    className="custom-input w-full"
-                    type="text"
-                    placeholder="AMO"
-                  />
+        <div className="grid grid-cols-2 gap-4">
+          {[...contractors].reverse().map((contractor, index) => {
+            const originalIndex = contractors.length - 1 - index;
+            return (
+              <div
+                key={originalIndex}
+                className="flex flex-col gap-4 border p-4 rounded-none bg-white"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="text-neutral font-semibold">
+                    Contractor {originalIndex + 1}
+                  </h3>
+                  {contractors.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-error btn-xs text-white"
+                      onClick={() => removeContractor(originalIndex)}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </form>
- 
+
+                <input
+                  name="contractorName"
+                  value={contractor.contractorName.toUpperCase()}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="text"
+                  placeholder="Contractor Name"
+                />
+                <input
+                  name="address"
+                  value={contractor.address}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="text"
+                  placeholder="Address"
+                />
+                <input
+                  name="email"
+                  value={contractor.email}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="email"
+                  placeholder="Email Address"
+                />
+                <input
+                  name="tin"
+                  value={contractor.tin}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="text"
+                  placeholder="TIN Number"
+                />
+                <input
+                  name="amo"
+                  value={contractor.amo}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="text"
+                  placeholder="AMO"
+                />
+                <input
+                  name="designation"
+                  value={contractor.designation}
+                  onChange={(e) => handleContractorChange(originalIndex, e)}
+                  className="custom-input w-full"
+                  type="text"
+                  placeholder="Designation"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </form>
     </div>
   );
 };

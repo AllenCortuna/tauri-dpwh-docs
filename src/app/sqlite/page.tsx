@@ -64,10 +64,10 @@ const SQLiteManager: React.FC = () => {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           contractorName TEXT NOT NULL,
           address TEXT NOT NULL,
-          email TEXT NOT NULL,
-          amo TEXT NOT NULL,
-          designation TEXT NOT NULL,
-          tin TEXT NOT NULL,
+          email TEXT,
+          amo TEXT,
+          designation TEXT,
+          tin TEXT,
           lastUpdated TEXT NOT NULL
         );
       `);

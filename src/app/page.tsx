@@ -85,13 +85,13 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {menuItems.map((item, index) => (
             <Link href={item.href} key={index}>
-              <div className="group bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-blue-500 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">
+              <div className="group bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-orange-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-blue-50 text-gray-600 group-hover:text-blue-600">
+                  <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-blue-50 text-gray-600 group-hover:text-orange-600">
                     {item.icon}
                   </div>
                   <div>
-                    <h2 className="font-semibold text-gray-800 group-hover:text-blue-600">
+                    <h2 className="font-semibold text-gray-800 group-hover:text-orange-600">
                       {item.title}
                     </h2>
                     <p className="text-xs text-gray-500">
