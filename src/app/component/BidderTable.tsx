@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useEffect, useRef } from "react";
+import Database from "@tauri-apps/plugin-sql";
 
 interface BidderData {
   name: string;
@@ -13,6 +14,15 @@ interface BidderTableProps {
   setInputArr: React.Dispatch<React.SetStateAction<BidderData[]>>;
 }
 
+interface Contractor {
+  id: number;
+  contractorName: string;
+  email: string;
+  amo: string;
+  tin: string;
+  address: string;
+}
+
 const BidderTable: React.FC<BidderTableProps> = ({ inputArr, setInputArr }) => {
   // State to manage form input data
   const [inputData, setInputData] = useState<BidderData>({
@@ -22,12 +32,74 @@ const BidderTable: React.FC<BidderTableProps> = ({ inputArr, setInputArr }) => {
     philReg: "",
   });
 
+  // State for contractors and dropdown
+  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [filteredContractors, setFilteredContractors] = useState<Contractor[]>([]);
+  const [showContractorDropdown, setShowContractorDropdown] = useState(false);
+  const contractorDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch contractors from database on component mount
+  useEffect(() => {
+    const fetchContractors = async () => {
+      try {
+        const db = await Database.load("sqlite:tauri.db");
+        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
+        setContractors(contractorsResult);
+      } catch (error) {
+        console.error("Error fetching contractors:", error);
+      }
+    };
+
+    fetchContractors();
+  }, []);
+
+  // Handle click outside contractor dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contractorDropdownRef.current && !contractorDropdownRef.current.contains(event.target as Node)) {
+        setShowContractorDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Handle changes in form inputs
   const changehandle = (e: ChangeEvent<HTMLInputElement>): void => {
+    const { name, value } = e.target;
+    
     setInputData({
       ...inputData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Filter contractors when typing in name field
+    if (name === "name") {
+      if (value.trim() === "") {
+        setFilteredContractors([]);
+        setShowContractorDropdown(false);
+      } else {
+        const regex = new RegExp(value, "i");
+        const filtered = contractors.filter(c => 
+          regex.test(c.contractorName)
+        );
+        setFilteredContractors(filtered);
+        setShowContractorDropdown(true);
+      }
+    }
+  };
+
+  // Handle contractor selection from dropdown
+  const handleContractorSelect = (contractor: Contractor) => {
+    setInputData(prevData => ({
+      ...prevData,
+      name: contractor.contractorName,
+      address: contractor.address || ""
+    }));
+    setShowContractorDropdown(false);
   };
 
   // Destructure input data for easy access
@@ -61,15 +133,34 @@ const BidderTable: React.FC<BidderTableProps> = ({ inputArr, setInputArr }) => {
   return (
     <div className="flex justify-start gap-20 max-w-[60rem] mx-auto mt-10">
       <span className="gap-5 flex flex-col mx-auto">
-        <input
-          type="text"
-          autoComplete="off"
-          className="custom-input"
-          name="name"
-          value={inputData.name}
-          onChange={changehandle}
-          placeholder="Name"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            autoComplete="off"
+            className="custom-input w-80"
+            name="name"
+            value={inputData.name}
+            onChange={changehandle}
+            placeholder="Name"
+          />
+          {showContractorDropdown && filteredContractors.length > 0 && (
+            <div 
+              ref={contractorDropdownRef}
+              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              {filteredContractors.map((contractor) => (
+                <div
+                  key={contractor.id}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => handleContractorSelect(contractor)}
+                >
+                  <div className="font-medium">{contractor.contractorName}</div>
+                  <div className="text-xs text-gray-500 truncate">{contractor.address}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           type="text"
           autoComplete="off"

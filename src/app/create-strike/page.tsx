@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import CreatableSelect from "react-select/creatable";
 import BidderTable from "../component/BidderTable";
@@ -8,6 +8,7 @@ import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
 import { formatNumber } from "../../../config/formatNumber";
 import { formatDate } from "../../../config/convertToDate";
+import Database from "@tauri-apps/plugin-sql";
 
 interface Bidder {
     name: string;
@@ -24,6 +25,13 @@ interface FormData {
   category: string;
 }
 
+interface Contract {
+  id: number;
+  contractID: string;
+  projectName: string;
+  batch: string;
+}
+
 const Create3Strike = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [inputArr, setInputArr] = useState<Bidder[]>([]);
@@ -34,6 +42,26 @@ const Create3Strike = () => {
     date: "",
     category: "",
   });
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
+  const [showContractDropdown, setShowContractDropdown] = useState(false);
+  const contractDropdownRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const db = await Database.load("sqlite:tauri.db");
+        const contractsResult = await db.select<Contract[]>(
+          "SELECT id, contractID, projectName, batch FROM contracts"
+        );
+        setContracts(contractsResult);
+      } catch (error) {
+        console.error("Error fetching contracts:", error);
+      }
+    };
+
+    fetchContracts();
+  }, []);
 
   const options = [
     { value: "Infrastructure", label: "Infrastructure" },
@@ -47,6 +75,21 @@ const Create3Strike = () => {
       ...prevData,
       [name]: value,
     }));
+
+    // Filter contracts when typing in contractID field
+    if (name === "contractID") {
+      if (value.trim() === "") {
+        setFilteredContracts([]);
+        setShowContractDropdown(false);
+      } else {
+        const regex = new RegExp(value, "i");
+        const filtered = contracts.filter(c => 
+          regex.test(c.contractID) || regex.test(c.projectName)
+        );
+        setFilteredContracts(filtered);
+        setShowContractDropdown(true);
+      }
+    }
   };
 
   type SelectOption = { value: string; label: string } | null;
@@ -169,14 +212,41 @@ const Create3Strike = () => {
       <ToastContainer />
       <form className="flex flex-col gap-8 min-w-[60rem] mx-auto">
         <div className="flex gap-10">
-          <input
-            name="contractID"
-            value={data.contractID}
-            onChange={handleChange}
-            placeholder="Contract ID"
-            className="custom-input w-48"
-            type="text"
-          />
+          <div className="relative">
+            <input
+              name="contractID"
+              value={data.contractID}
+              onChange={handleChange}
+              placeholder="Contract ID"
+              className="custom-input w-48"
+              type="text"
+              autoComplete="off"
+            />
+            {showContractDropdown && filteredContracts.length > 0 && (
+              <div 
+                ref={contractDropdownRef}
+                className="absolute z-10 w-[40rem] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+              >
+                {filteredContracts.map((contract) => (
+                  <div
+                    key={contract.id}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                    onClick={() => {
+                      setData(prevData => ({
+                        ...prevData,
+                        contractID: contract.contractID,
+                        contractName: contract.projectName
+                      }));
+                      setShowContractDropdown(false);
+                    }}
+                  >
+                    <div className="font-medium">{contract.contractID}</div>
+                    <div className="text-xs text-gray-500 truncate">{contract.projectName}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <input
             name="contractName"
             value={data.contractName}
