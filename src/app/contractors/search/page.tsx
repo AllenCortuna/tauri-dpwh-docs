@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import Database from "@tauri-apps/plugin-sql";
+import { confirm } from '@tauri-apps/plugin-dialog';
 
 interface Mailing {
   id: number;
@@ -94,7 +95,17 @@ const SearchMailings: React.FC = () => {
   };
 
   const handleDeleteMailing = async (id: number) => {
-    // if (!window.confirm("Are you sure you want to delete this contractor?")) return;
+    // Get the contractor name for the confirmation message
+    const contractor = mailings.find(m => m.id === id);
+    if (!contractor) return;
+
+    // Show confirmation dialog
+    const confirmation = await confirm(
+      `This action cannot be reverted. Are you sure you want to delete ${contractor.contractorName}?`,
+      { title: 'Tauri', kind: 'warning' }
+    );
+
+    if (!confirmation) return;
 
     try {
       const db = await Database.load("sqlite:tauri.db");

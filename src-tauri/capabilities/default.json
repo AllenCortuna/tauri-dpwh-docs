@@ -8,7 +8,8 @@
   "permissions": [
     "core:default",
     "fs:default",
-    "sql:default",  
-    "sql:allow-execute"
+    "sql:default",
+    "sql:allow-execute",
+    "dialog:default"
   ]
 }

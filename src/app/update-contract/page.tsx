@@ -33,8 +33,8 @@ const SearchContracts: React.FC = () => {
   const [searchType, setSearchType] = useState<
     "batch" | "contractID" | "bidding" | "projectName" | "contractor"
   >("batch");
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState<boolean>(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [editFormData, setEditFormData] = useState<Contract | null>(null);
 
   // Fetch all contracts from the database
   const fetchContracts = async () => {
@@ -94,17 +94,80 @@ const SearchContracts: React.FC = () => {
     }
   };
 
-  // Handle view button click
-  const handleView = (contract: Contract) => {
-    setSelectedContract(contract);
-    setIsViewModalOpen(true);
+  // Handle edit button click
+  const handleEdit = (contract: Contract) => {
+    setEditFormData(contract);
+    setIsEditModalOpen(true);
   };
 
-  // Handle modal close
-  const handleCloseModal = () => {
-    setIsViewModalOpen(false);
-    setSelectedContract(null);
+  // Handle edit form change
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev!,
+      [name]: value
+    }));
   };
+
+  // Handle update contract
+  const handleUpdateContract = async () => {
+    try {
+      const db = await Database.load("sqlite:tauri.db");
+      await db.execute(
+        `UPDATE contracts SET 
+        batch = ?,
+        posting = ?,
+        preBid = ?,
+        bidding = ?,
+        contractID = ?,
+        projectName = ?,
+        status = ?,
+        contractAmount = ?,
+        contractor = ?,
+        bidEvalStart = ?,
+        bidEvalEnd = ?,
+        postQualStart = ?,
+        postQualEnd = ?,
+        reso = ?,
+        noa = ?,
+        ntp = ?,
+        ntpRecieve = ?,
+        contractDate = ?,
+        lastUpdated = CURRENT_TIMESTAMP
+        WHERE id = ?`,
+        [
+          editFormData?.batch,
+          editFormData?.posting,
+          editFormData?.preBid,
+          editFormData?.bidding,
+          editFormData?.contractID,
+          editFormData?.projectName,
+          editFormData?.status,
+          editFormData?.contractAmount,
+          editFormData?.contractor,
+          editFormData?.bidEvalStart,
+          editFormData?.bidEvalEnd,
+          editFormData?.postQualStart,
+          editFormData?.postQualEnd,
+          editFormData?.reso,
+          editFormData?.noa,
+          editFormData?.ntp,
+          editFormData?.ntpRecieve,
+          editFormData?.contractDate,
+          editFormData?.id
+        ]
+      );
+      
+      toast.success("Contract updated successfully");
+      setIsEditModalOpen(false);
+      setEditFormData(null);
+      fetchContracts(); // Refresh the contracts list
+    } catch (error) {
+      toast.error("Failed to update contract");
+      console.error(error);
+    }
+  };
+
 
   return (
     <div className="p-10 bg-gray-50 min-h-screen w-full">
@@ -168,10 +231,10 @@ const SearchContracts: React.FC = () => {
                 <td className="p-3 text-gray-700">{contract.bidding}</td>
                 <td className="p-3">
                   <button
-                    onClick={() => handleView(contract)}
-                    className="btn-outline text-primary rounded-none shadow-md btn-xs btn"
+                    onClick={() => handleEdit(contract)}
+                    className="btn-outline text-warning rounded-none shadow-md btn-xs btn"
                   >
-                    View
+                    Edit
                   </button>
                 </td>
               </tr>
@@ -180,171 +243,252 @@ const SearchContracts: React.FC = () => {
         </table>
       </div>
 
-      {/* View Modal */}
-      {isViewModalOpen && selectedContract && (
+      {/* Edit Modal */}
+      {isEditModalOpen && editFormData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
-          <div className="bg-white p-8 rounded-lg w-11/12 max-w-4xl shadow-xl">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">View Contract</h2>
-            <div className="grid grid-cols-2 gap-6">
-              {/* Batch */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Batch</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.batch}
-                </p>
+          <div className="bg-white p-6 md:p-8 rounded-lg w-11/12 max-w-5xl shadow-xl overflow-y-auto max-h-[90vh]">
+            <h2 className="text-xl font-bold mb-6 text-gray-800">Edit Contract</h2>
+            <div className="grid grid-cols-1 gap-4">
+              {/* Basic Information Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="block">
+                  <span className="font-medium text-gray-700">Batch</span>
+                  <input
+                    type="text"
+                    name="batch"
+                    value={editFormData.batch}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+
+                <div className="block">
+                  <span className="font-medium text-gray-700">Contract ID</span>
+                  <input
+                    type="text"
+                    name="contractID"
+                    value={editFormData.contractID}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+
+                <div className="block">
+                  <span className="font-medium text-gray-700">Project Name</span>
+                  <input
+                    type="text"
+                    name="projectName"
+                    value={editFormData.projectName}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
 
-              {/* Posting Date */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Posting Date</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.posting}
-                </p>
+              {/* Dates Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="block">
+                  <span className="font-medium text-gray-700">Posting Date</span>
+                  <input
+                    type="date"
+                    name="posting"
+                    value={editFormData.posting}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+
+                <div className="block">
+                  <span className="font-medium text-gray-700">Pre-Bid Date</span>
+                  <input
+                    type="date"
+                    name="preBid"
+                    value={editFormData.preBid}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+
+                <div className="block">
+                  <span className="font-medium text-gray-700">Bidding Date</span>
+                  <input
+                    type="date"
+                    name="bidding"
+                    value={editFormData.bidding}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
 
-              {/* Pre-Bid Date */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Pre-Bid Date</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.preBid}
-                </p>
+              {/* Bid Evaluation Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="block">
+                  <span className="font-medium text-gray-700">Bid Evaluation Date</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-xs text-gray-600">From:</span>
+                      <input
+                        type="date"
+                        name="bidEvalStart"
+                        value={editFormData.bidEvalStart || ""}
+                        onChange={handleEditFormChange}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">To:</span>
+                      <input
+                        type="date"
+                        name="bidEvalEnd"
+                        value={editFormData.bidEvalEnd || ""}
+                        onChange={handleEditFormChange}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="block">
+                  <span className="font-medium text-gray-700">Post Qualification Date</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-xs text-gray-600">From:</span>
+                      <input
+                        type="date"
+                        name="postQualStart"
+                        value={editFormData.postQualStart || ""}
+                        onChange={handleEditFormChange}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">To:</span>
+                      <input
+                        type="date"
+                        name="postQualEnd"
+                        value={editFormData.postQualEnd || ""}
+                        onChange={handleEditFormChange}
+                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Bidding Date */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Bidding Date</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.bidding}
-                </p>
-              </div>
+              {/* Additional Details Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="block">
+                  <span className="font-medium text-gray-700">Resolution</span>
+                  <input
+                    type="date"
+                    name="reso"
+                    value={editFormData.reso || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Contract ID */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Contract ID</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.contractID}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Notice of Award</span>
+                  <input
+                    type="date"
+                    name="noa"
+                    value={editFormData.noa || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Project Name */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Project Name</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.projectName}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Notice to Proceed</span>
+                  <input
+                    type="date"
+                    name="ntp"
+                    value={editFormData.ntp || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Status */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Status</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.status}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">NTP Receive Date</span>
+                  <input
+                    type="date"
+                    name="ntpRecieve"
+                    value={editFormData.ntpRecieve || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Contract Amount */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Contract Amount</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.contractAmount || "N/A"}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Contract Date</span>
+                  <input
+                    type="date"
+                    name="contractDate"
+                    value={editFormData.contractDate || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Contractor */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Contractor</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.contractor || "N/A"}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Contract Amount</span>
+                  <input
+                    type="text"
+                    name="contractAmount"
+                    value={editFormData.contractAmount || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Bid Evaluation Start */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Bid Evaluation Start</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.bidEvalStart || "N/A"}
-                </p>
-              </div>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Contractor</span>
+                  <input
+                    type="text"
+                    name="contractor"
+                    value={editFormData.contractor || ""}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
 
-              {/* Bid Evaluation End */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Bid Evaluation End</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.bidEvalEnd || "N/A"}
-                </p>
-              </div>
-
-              {/* Post-Qualification Start */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Post-Qualification Start</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.postQualStart || "N/A"}
-                </p>
-              </div>
-
-              {/* Post-Qualification End */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Post-Qualification End</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.postQualEnd || "N/A"}
-                </p>
-              </div>
-
-              {/* Resolution */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Resolution</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.reso || "N/A"}
-                </p>
-              </div>
-
-              {/* Notice of Award */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Notice of Award</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.noa || "N/A"}
-                </p>
-              </div>
-
-              {/* Notice to Proceed */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Notice to Proceed</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.ntp || "N/A"}
-                </p>
-              </div>
-
-              {/* NTP Receive Date */}
-              <div className="block">
-                <span className="font-medium text-gray-700">NTP Receive Date</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.ntpRecieve || "N/A"}
-                </p>
-              </div>
-
-              {/* Contract Date */}
-              <div className="block">
-                <span className="font-medium text-gray-700">Contract Date</span>
-                <p className="mt-1 p-2 w-full border border-gray-300 rounded-lg bg-gray-50">
-                  {selectedContract.contractDate || "N/A"}
-                </p>
+                <div className="block">
+                  <span className="font-medium text-gray-700">Status</span>
+                  <input
+                    type="text"
+                    name="status"
+                    value={editFormData.status}
+                    onChange={handleEditFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Modal Buttons */}
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end gap-4 mt-6">
               <button
-                type="button"
-                onClick={handleCloseModal}
-                className="bg-gray-500 text-white p-2 rounded-lg shadow-md hover:bg-gray-600 transition duration-200"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditFormData(null);
+                }}
+                className="btn-outline text-gray-700 rounded-none shadow-md btn btn-sm"
               >
-                Close
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateContract}
+                className="btn btn-neutral rounded-none shadow-md text-white btn-sm"
+              >
+                Save Changes
               </button>
             </div>
           </div>
         </div>
       )}
-
       <ToastContainer />
     </div>
   );
