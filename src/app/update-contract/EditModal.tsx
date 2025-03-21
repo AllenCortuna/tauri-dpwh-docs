@@ -1,0 +1,287 @@
+// EditModal.tsx
+import React from "react";
+interface Contract {
+    id: number;
+    batch: string;
+    posting: string;
+    preBid: string;
+    bidding: string;
+    contractID: string;
+    projectName: string;
+    status: string;
+    contractAmount?: string;
+    contractor?: string;
+    bidEvalStart?: string;
+    bidEvalEnd?: string;
+    postQualStart?: string;
+    postQualEnd?: string;
+    reso?: string;
+    noa?: string;
+    ntp?: string;
+    ntpRecieve?: string;
+    contractDate?: string;
+    lastUpdated: string;
+  }
+
+interface EditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editFormData: Contract | null;
+  onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSave: () => void;
+}
+
+const EditModal: React.FC<EditModalProps> = ({
+  isOpen,
+  onClose,
+  editFormData,
+  onFormChange,
+  onSave,
+}) => {
+  if (!isOpen || !editFormData) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
+      <div className="bg-white p-6 md:p-8 rounded-lg w-11/12 max-w-5xl shadow-xl overflow-y-auto max-h-[90vh]">
+        <h2 className="text-xl font-bold mb-6 text-gray-800">Edit Contract</h2>
+        <div className="grid grid-cols-1 gap-4">
+          {/* Basic Information Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="block">
+              <span className="font-medium text-gray-700">Batch</span>
+              <input
+                type="text"
+                name="batch"
+                value={editFormData.batch}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Contract ID</span>
+              <input
+                type="text"
+                name="contractID"
+                value={editFormData.contractID}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Project Name</span>
+              <input
+                type="text"
+                name="projectName"
+                value={editFormData.projectName}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          {/* Dates Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="block">
+              <span className="font-medium text-gray-700">Posting Date</span>
+              <input
+                type="date"
+                name="posting"
+                value={editFormData.posting}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Pre-Bid Date</span>
+              <input
+                type="date"
+                name="preBid"
+                value={editFormData.preBid}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Bidding Date</span>
+              <input
+                type="date"
+                name="bidding"
+                value={editFormData.bidding}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+
+          {/* Bid Evaluation Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="block">
+              <span className="font-medium text-gray-700">Bid Evaluation Date</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs text-gray-600">From:</span>
+                  <input
+                    type="date"
+                    name="bidEvalStart"
+                    value={editFormData.bidEvalStart || ""}
+                    onChange={onFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <span className="text-xs text-gray-600">To:</span>
+                  <input
+                    type="date"
+                    name="bidEvalEnd"
+                    value={editFormData.bidEvalEnd || ""}
+                    onChange={onFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Post Qualification Date</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs text-gray-600">From:</span>
+                  <input
+                    type="date"
+                    name="postQualStart"
+                    value={editFormData.postQualStart || ""}
+                    onChange={onFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <span className="text-xs text-gray-600">To:</span>
+                  <input
+                    type="date"
+                    name="postQualEnd"
+                    value={editFormData.postQualEnd || ""}
+                    onChange={onFormChange}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Details Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="block">
+              <span className="font-medium text-gray-700">Resolution</span>
+              <input
+                type="date"
+                name="reso"
+                value={editFormData.reso || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Notice of Award</span>
+              <input
+                type="date"
+                name="noa"
+                value={editFormData.noa || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Notice to Proceed</span>
+              <input
+                type="date"
+                name="ntp"
+                value={editFormData.ntp || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">NTP Receive Date</span>
+              <input
+                type="date"
+                name="ntpRecieve"
+                value={editFormData.ntpRecieve || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Contract Date</span>
+              <input
+                type="date"
+                name="contractDate"
+                value={editFormData.contractDate || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Contract Amount</span>
+              <input
+                type="text"
+                name="contractAmount"
+                value={editFormData.contractAmount || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Contractor</span>
+              <input
+                type="text"
+                name="contractor"
+                value={editFormData.contractor || ""}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            <div className="block">
+              <span className="font-medium text-gray-700">Status</span>
+              <input
+                type="text"
+                name="status"
+                value={editFormData.status}
+                onChange={onFormChange}
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Buttons */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={onClose}
+            className="btn-outline text-gray-700 rounded-none shadow-md btn btn-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSave}
+            className="btn btn-neutral rounded-none shadow-md text-white btn-sm"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditModal;
