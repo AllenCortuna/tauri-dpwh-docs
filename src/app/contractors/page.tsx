@@ -96,7 +96,7 @@ const CreateContractors: React.FC = () => {
         await db.execute(
           `INSERT INTO contractors (
             contractorName, address, email, amo, designation, tin, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
             contractor.contractorName,
             contractor.address,
@@ -125,6 +125,7 @@ const CreateContractors: React.FC = () => {
       if (error instanceof Error) {
         alert(`Error: ${error.message}`);
       } else {
+        console.error("An unknown error occurred:", error);
         alert("An unknown error occurred.");
       }
     } finally {
