@@ -77,6 +77,12 @@ export default function Home() {
       subtitle: "Manage SQL queries and backup",
       href: "/sqlite",
     },
+    {
+      icon: <FaDatabase className="w-6 h-6" />,
+      title: "Update Multiple Contracts",
+      subtitle: "Update Multiple Contracts at once",
+      href: "/update-multiple-contract",
+    },
   ];
 
   return (

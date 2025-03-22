@@ -135,42 +135,107 @@ const UploadExcel: React.FC = () => {
     }
 
     setIsLoading(true);
+    let addedCount = 0;
+    let updatedCount = 0;
+
     try {
       const db = await Database.load("sqlite:tauri.db");
 
       for (const contract of contracts) {
-        await db.execute(
-          `INSERT INTO contracts (
-            batch, posting, preBid, bidding, contractID, projectName, status,
-            contractAmount, contractor, bidEvalStart, bidEvalEnd, postQualStart,
-            postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            contract.batch,
-            contract.posting,
-            contract.preBid,
-            contract.bidding,
-            contract.contractID,
-            contract.projectName,
-            "posted",
-            contract.contractAmount || null,
-            contract.contractor || null,
-            contract.bidEvalStart || null,
-            contract.bidEvalEnd || null,
-            contract.postQualStart || null,
-            contract.postQualEnd || null,
-            contract.reso || null,
-            contract.noa || null,
-            contract.ntp || null,
-            contract.ntpRecieve || null,
-            contract.contractDate || null,
-            new Date().toISOString(),
-          ]
-        );
+        try {
+          // Check if contract exists
+          const existingContract = await db.select(
+            "SELECT * FROM contracts WHERE contractID = ?",
+            [contract.contractID]
+          );
+
+          if ((existingContract as Contract[]).length > 0) {
+            // Update existing contract with new values if they exist
+            await db.execute(
+              `UPDATE contracts SET
+                batch = COALESCE(?, batch),
+                posting = COALESCE(?, posting),
+                preBid = COALESCE(?, preBid),
+                bidding = COALESCE(?, bidding),
+                projectName = COALESCE(?, projectName),
+                contractAmount = COALESCE(?, contractAmount),
+                contractor = COALESCE(?, contractor),
+                bidEvalStart = COALESCE(?, bidEvalStart),
+                bidEvalEnd = COALESCE(?, bidEvalEnd),
+                postQualStart = COALESCE(?, postQualStart),
+                postQualEnd = COALESCE(?, postQualEnd),
+                reso = COALESCE(?, reso),
+                noa = COALESCE(?, noa),
+                ntp = COALESCE(?, ntp),
+                ntpRecieve = COALESCE(?, ntpRecieve),
+                contractDate = COALESCE(?, contractDate),
+                lastUpdated = ?
+              WHERE contractID = ?`,
+              [
+                contract.batch || null,
+                contract.posting || null,
+                contract.preBid || null,
+                contract.bidding || null,
+                contract.projectName || null,
+                contract.contractAmount || null,
+                contract.contractor || null,
+                contract.bidEvalStart || null,
+                contract.bidEvalEnd || null,
+                contract.postQualStart || null,
+                contract.postQualEnd || null,
+                contract.reso || null,
+                contract.noa || null,
+                contract.ntp || null,
+                contract.ntpRecieve || null,
+                contract.contractDate || null,
+                new Date().toISOString(),
+                contract.contractID
+              ]
+            );
+            updatedCount++;
+          } else {
+            // Insert new contract
+            await db.execute(
+              `INSERT INTO contracts (
+                batch, posting, preBid, bidding, contractID, projectName, status,
+                contractAmount, contractor, bidEvalStart, bidEvalEnd, postQualStart,
+                postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                contract.batch,
+                contract.posting,
+                contract.preBid,
+                contract.bidding,
+                contract.contractID,
+                contract.projectName,
+                "posted",
+                contract.contractAmount || null,
+                contract.contractor || null,
+                contract.bidEvalStart || null,
+                contract.bidEvalEnd || null,
+                contract.postQualStart || null,
+                contract.postQualEnd || null,
+                contract.reso || null,
+                contract.noa || null,
+                contract.ntp || null,
+                contract.ntpRecieve || null,
+                contract.contractDate || null,
+                new Date().toISOString(),
+              ]
+            );
+            addedCount++;
+            successToast(`Added new contract: ${contract.contractID}`);
+          }
+        } catch (error) {
+          console.error(`Error processing contract ${contract.contractID}:`, error);
+          errorToast(`Failed to process contract ${contract.contractID}`);
+        }
       }
 
       setContracts([]);
-      successToast("Contracts submitted successfully!");
+      successToast(
+        `Successfully processed contracts:\n${addedCount} added, ${updatedCount} updated`
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         errorToast(error.message);

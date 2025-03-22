@@ -127,7 +127,7 @@ const CreateContracts: React.FC = () => {
     setIsLoading(true);
     try {
       const db = await Database.load("sqlite:tauri.db");
-
+  
       for (const contract of contracts) {
         await db.execute(
           `INSERT INTO contracts (

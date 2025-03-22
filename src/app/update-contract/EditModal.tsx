@@ -1,27 +1,27 @@
 // EditModal.tsx
 import React from "react";
 interface Contract {
-    id: number;
-    batch: string;
-    posting: string;
-    preBid: string;
-    bidding: string;
-    contractID: string;
-    projectName: string;
-    status: string;
-    contractAmount?: string;
-    contractor?: string;
-    bidEvalStart?: string;
-    bidEvalEnd?: string;
-    postQualStart?: string;
-    postQualEnd?: string;
-    reso?: string;
-    noa?: string;
-    ntp?: string;
-    ntpRecieve?: string;
-    contractDate?: string;
-    lastUpdated: string;
-  }
+  id: number;
+  batch: string;
+  posting: string;
+  preBid: string;
+  bidding: string;
+  contractID: string;
+  projectName: string;
+  status: string;
+  contractAmount?: string;
+  contractor?: string;
+  bidEvalStart?: string;
+  bidEvalEnd?: string;
+  postQualStart?: string;
+  postQualEnd?: string;
+  reso?: string;
+  noa?: string;
+  ntp?: string;
+  ntpRecieve?: string;
+  contractDate?: string;
+  lastUpdated: string;
+}
 
 interface EditModalProps {
   isOpen: boolean;
@@ -43,7 +43,12 @@ const EditModal: React.FC<EditModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
       <div className="bg-white p-6 md:p-8 rounded-lg w-11/12 max-w-5xl shadow-xl overflow-y-auto max-h-[90vh]">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">Edit Contract</h2>
+        <h2 className="text-xl font-bold mb-10 text-gray-800 flex gap-5">
+          <p>{editFormData.contractID}</p>
+          <div className="border px-4 flex py-0 text-[0.7rem] text-center border-primary text-primary font-bold rounded-md">
+            {editFormData?.status}
+          </div>
+        </h2>
         <div className="grid grid-cols-1 gap-4">
           {/* Basic Information Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -57,19 +62,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
               />
             </div>
-
-            <div className="block">
-              <span className="font-medium text-gray-700">Contract ID</span>
-              <input
-                type="text"
-                name="contractID"
-                value={editFormData.contractID}
-                onChange={onFormChange}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="block">
+            <div className="block col-span-2">
               <span className="font-medium text-gray-700">Project Name</span>
               <input
                 type="text"
@@ -120,7 +113,9 @@ const EditModal: React.FC<EditModalProps> = ({
           {/* Bid Evaluation Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="block">
-              <span className="font-medium text-gray-700">Bid Evaluation Date</span>
+              <span className="font-medium text-gray-700">
+                Bid Evaluation Date
+              </span>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-xs text-gray-600">From:</span>
@@ -146,7 +141,9 @@ const EditModal: React.FC<EditModalProps> = ({
             </div>
 
             <div className="block">
-              <span className="font-medium text-gray-700">Post Qualification Date</span>
+              <span className="font-medium text-gray-700">
+                Post Qualification Date
+              </span>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-xs text-gray-600">From:</span>
@@ -197,7 +194,9 @@ const EditModal: React.FC<EditModalProps> = ({
             </div>
 
             <div className="block">
-              <span className="font-medium text-gray-700">Notice to Proceed</span>
+              <span className="font-medium text-gray-700">
+                Notice to Proceed
+              </span>
               <input
                 type="date"
                 name="ntp"
@@ -208,7 +207,9 @@ const EditModal: React.FC<EditModalProps> = ({
             </div>
 
             <div className="block">
-              <span className="font-medium text-gray-700">NTP Receive Date</span>
+              <span className="font-medium text-gray-700">
+                NTP Receive Date
+              </span>
               <input
                 type="date"
                 name="ntpRecieve"
@@ -246,17 +247,6 @@ const EditModal: React.FC<EditModalProps> = ({
                 type="text"
                 name="contractor"
                 value={editFormData.contractor || ""}
-                onChange={onFormChange}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <div className="block">
-              <span className="font-medium text-gray-700">Status</span>
-              <input
-                type="text"
-                name="status"
-                value={editFormData.status}
                 onChange={onFormChange}
                 className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
               />

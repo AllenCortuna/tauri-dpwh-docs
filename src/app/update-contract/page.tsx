@@ -117,6 +117,15 @@ const SearchContracts: React.FC = () => {
   const handleUpdateContract = async () => {
     try {
       const db = await Database.load("sqlite:tauri.db");
+  
+      // Determine status based on noa and ntp
+      let status = "posted";
+      if (editFormData?.noa && editFormData?.ntp) {
+        status = "proceed";
+      } else if (editFormData?.noa) {
+        status = "awarded";
+      }
+  
       await db.execute(
         `UPDATE contracts SET 
         batch = ?,
@@ -146,7 +155,7 @@ const SearchContracts: React.FC = () => {
           editFormData?.bidding,
           editFormData?.contractID,
           editFormData?.projectName,
-          editFormData?.status,
+          status, // Use the calculated status instead of editFormData?.status
           editFormData?.contractAmount,
           editFormData?.contractor,
           editFormData?.bidEvalStart,
@@ -165,7 +174,7 @@ const SearchContracts: React.FC = () => {
       toast.success("Contract updated successfully");
       setIsEditModalOpen(false);
       setEditFormData(null);
-      fetchContracts(); // Refresh the contracts list
+      fetchContracts();
     } catch (error) {
       toast.error("Failed to update contract");
       console.error(error);
