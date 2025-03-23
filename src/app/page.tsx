@@ -10,16 +10,24 @@ import {
   FaMoneyBill,
   FaReceipt,
   FaUsers,
-  FaDatabase
+  FaDatabase,
+  FaLayerGroup,
+  FaChartBar
 } from 'react-icons/fa'; // Import icons
 
 export default function Home() {
   const menuItems = [
     {
+      icon: <FaChartBar className="w-6 h-6" />,
+      title: "Dashboard",
+      subtitle: "View contract statistics",
+      href: "/dashboard",
+    },
+    {
       icon: <FaStamp className="w-6 h-6" />,
       title: "PIO Certification",
       subtitle: "Generate certification documents",
-      href: "/create-pio-cert",
+      href: "/",
     },
     {
       icon: <FaExclamationCircle className="w-6 h-6" />,
@@ -78,7 +86,7 @@ export default function Home() {
       href: "/sqlite",
     },
     {
-      icon: <FaDatabase className="w-6 h-6" />,
+      icon: <FaLayerGroup className="w-6 h-6" />,
       title: "Update Multiple Contracts",
       subtitle: "Update Multiple Contracts at once",
       href: "/update-multiple-contract",

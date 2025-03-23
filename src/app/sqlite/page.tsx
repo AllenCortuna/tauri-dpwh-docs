@@ -39,6 +39,7 @@ const SQLiteManager: React.FC = () => {
         CREATE TABLE IF NOT EXISTS contracts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           batch TEXT NOT NULL,
+          year TEXT NOT NULL,
           posting TEXT NOT NULL,
           preBid TEXT NOT NULL,
           bidding TEXT NOT NULL,

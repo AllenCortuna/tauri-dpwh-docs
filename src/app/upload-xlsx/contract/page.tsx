@@ -7,11 +7,13 @@ import * as XLSX from "xlsx";
 
 interface Contract {
   batch: string;
+  year: string; // Added year field
   posting: string;
   preBid: string;
   bidding: string;
   contractID: string;
   projectName: string;
+  status?: string;
   contractAmount?: string;
   contractor?: string;
   bidEvalStart?: string;
@@ -27,6 +29,7 @@ interface Contract {
 
 interface ExcelRow {
   "Batch No.": string;
+  "Year": string | number; // Modified to accept both string and number
   "Posting Date": string;
   "Pre-Bid Date": string;
   "Bidding Date": string;
@@ -58,6 +61,7 @@ const UploadExcel: React.FC = () => {
           CREATE TABLE IF NOT EXISTS contracts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             batch TEXT NOT NULL,
+            year TEXT NOT NULL,
             posting TEXT NOT NULL,
             preBid TEXT NOT NULL,
             bidding TEXT NOT NULL,
@@ -102,6 +106,7 @@ const UploadExcel: React.FC = () => {
           const json = XLSX.utils.sheet_to_json(worksheet) as ExcelRow[];
           const parsedContracts = json.map((row) => ({
             batch: row["Batch No."],
+            year: String(Math.floor(Number(row["Year"]))), // Convert to integer and then to string
             posting: row["Posting Date"],
             preBid: row["Pre-Bid Date"],
             bidding: row["Bidding Date"],
@@ -143,6 +148,14 @@ const UploadExcel: React.FC = () => {
 
       for (const contract of contracts) {
         try {
+          // Determine status based on noa and ntp
+          let status = "posted";
+          if (contract.noa && contract.ntp) {
+            status = "proceed";
+          } else if (contract.noa) {
+            status = "awarded";
+          }
+
           // Check if contract exists
           const existingContract = await db.select(
             "SELECT * FROM contracts WHERE contractID = ?",
@@ -151,9 +164,11 @@ const UploadExcel: React.FC = () => {
 
           if ((existingContract as Contract[]).length > 0) {
             // Update existing contract with new values if they exist
+            // For UPDATE operation
             await db.execute(
               `UPDATE contracts SET
                 batch = COALESCE(?, batch),
+                year = COALESCE(?, year),
                 posting = COALESCE(?, posting),
                 preBid = COALESCE(?, preBid),
                 bidding = COALESCE(?, bidding),
@@ -169,10 +184,12 @@ const UploadExcel: React.FC = () => {
                 ntp = COALESCE(?, ntp),
                 ntpRecieve = COALESCE(?, ntpRecieve),
                 contractDate = COALESCE(?, contractDate),
+                status = ?,
                 lastUpdated = ?
               WHERE contractID = ?`,
               [
                 contract.batch || null,
+                contract.year || null,
                 contract.posting || null,
                 contract.preBid || null,
                 contract.bidding || null,
@@ -188,6 +205,7 @@ const UploadExcel: React.FC = () => {
                 contract.ntp || null,
                 contract.ntpRecieve || null,
                 contract.contractDate || null,
+                status, // Use the calculated status
                 new Date().toISOString(),
                 contract.contractID
               ]
@@ -195,20 +213,22 @@ const UploadExcel: React.FC = () => {
             updatedCount++;
           } else {
             // Insert new contract
+            // For INSERT operation
             await db.execute(
               `INSERT INTO contracts (
-                batch, posting, preBid, bidding, contractID, projectName, status,
+                batch, year, posting, preBid, bidding, contractID, projectName, status,
                 contractAmount, contractor, bidEvalStart, bidEvalEnd, postQualStart,
                 postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 contract.batch,
+                contract.year,
                 contract.posting,
                 contract.preBid,
                 contract.bidding,
                 contract.contractID,
                 contract.projectName,
-                "posted",
+                status, // Use the calculated status instead of hardcoded "posted"
                 contract.contractAmount || null,
                 contract.contractor || null,
                 contract.bidEvalStart || null,

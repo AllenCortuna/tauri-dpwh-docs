@@ -24,11 +24,13 @@ const CreateContracts: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [data, setData] = useState<{
     batch: string;
+    year: string;
     posting: string;
     preBid: string;
     bidding: string;
   }>({
     batch: "",
+    year: "",
     posting: "",
     preBid: "",
     bidding: "",
@@ -49,6 +51,7 @@ const CreateContracts: React.FC = () => {
           CREATE TABLE IF NOT EXISTS contracts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             batch TEXT NOT NULL,
+            year TEXT NOT NULL,
             posting TEXT NOT NULL,
             preBid TEXT NOT NULL,
             bidding TEXT NOT NULL,
@@ -131,12 +134,13 @@ const CreateContracts: React.FC = () => {
       for (const contract of contracts) {
         await db.execute(
           `INSERT INTO contracts (
-            batch, posting, preBid, bidding, contractID, projectName, status,
+            batch, year, posting, preBid, bidding, contractID, projectName, status,
             contractAmount, contractor, bidEvalStart, bidEvalEnd, postQualStart,
             postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             data.batch,
+            data.year,
             data.posting,
             data.preBid,
             data.bidding,
@@ -161,6 +165,7 @@ const CreateContracts: React.FC = () => {
 
       setData({
         batch: "",
+        year: "",
         posting: "",
         preBid: "",
         bidding: "",
@@ -224,6 +229,17 @@ const CreateContracts: React.FC = () => {
               onChange={handleData}
               className="custom-input w-52"
               type="text"
+            />
+          </span>
+          <span className="gap-2 flex flex-col">
+            <p className="primary-text ml-1">Year:</p>
+            <input
+              name="year"
+              value={data.year}
+              onChange={handleData}
+              className="custom-input w-52"
+              type="text"
+              placeholder="YYYY"
             />
           </span>
         </div>

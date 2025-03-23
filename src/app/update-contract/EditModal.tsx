@@ -3,6 +3,7 @@ import React from "react";
 interface Contract {
   id: number;
   batch: string;
+  year: string; // Added year field
   posting: string;
   preBid: string;
   bidding: string;
@@ -62,7 +63,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
               />
             </div>
-            <div className="block col-span-2">
+            <div className="block col-span-2 lg:col-span-2">
               <span className="font-medium text-gray-700">Project Name</span>
               <input
                 type="text"

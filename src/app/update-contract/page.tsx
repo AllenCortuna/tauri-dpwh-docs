@@ -10,6 +10,7 @@ import EditModal from "./EditModal";
 interface Contract {
   id: number;
   batch: string;
+  year: string; // Added year field
   posting: string;
   preBid: string;
   bidding: string;
@@ -34,7 +35,7 @@ const SearchContracts: React.FC = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchType, setSearchType] = useState<
-    "batch" | "contractID" | "bidding" | "projectName" | "contractor"
+    "batch" | "year" | "contractID" | "bidding" | "projectName" | "contractor"
   >("batch");
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editFormData, setEditFormData] = useState<Contract | null>(null);
@@ -67,6 +68,10 @@ const SearchContracts: React.FC = () => {
       switch (searchType) {
         case "batch":
           query += `batch LIKE ?`;
+          params.push(`%${searchQuery}%`);
+          break;
+        case "year":
+          query += `year LIKE ?`;
           params.push(`%${searchQuery}%`);
           break;
         case "contractID":
@@ -129,6 +134,7 @@ const SearchContracts: React.FC = () => {
       await db.execute(
         `UPDATE contracts SET 
         batch = ?,
+        year = ?,
         posting = ?,
         preBid = ?,
         bidding = ?,
@@ -150,6 +156,7 @@ const SearchContracts: React.FC = () => {
         WHERE id = ?`,
         [
           editFormData?.batch,
+          editFormData?.year,
           editFormData?.posting,
           editFormData?.preBid,
           editFormData?.bidding,
@@ -200,12 +207,13 @@ const SearchContracts: React.FC = () => {
           value={searchType}
           onChange={(e) =>
             setSearchType(
-              e.target.value as "batch" | "contractID" | "bidding" | "projectName" | "contractor"
+              e.target.value as "batch" | "year" | "contractID" | "bidding" | "projectName" | "contractor"
             )
           }
           className="custom-input w-52"
         >
           <option value="batch">Batch</option>
+          <option value="year">Year</option>
           <option value="contractID">Contract ID</option>
           <option value="bidding">Bidding</option>
           <option value="projectName">Project Name</option>
@@ -232,6 +240,7 @@ const SearchContracts: React.FC = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="p-3 text-left font-semibold text-gray-700">Batch</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Year</th>
               <th className="p-3 text-left font-semibold text-gray-700">Contract ID</th>
               <th className="p-3 text-left font-semibold text-gray-700">Project Name</th>
               <th className="p-3 text-left font-semibold text-gray-700">Contractor</th>
@@ -246,6 +255,7 @@ const SearchContracts: React.FC = () => {
                 className="border-t hover:bg-gray-50 transition duration-200"
               >
                 <td className="p-3 text-gray-700">{contract.batch}</td>
+                <td className="p-3 text-gray-700">{contract.year}</td>
                 <td className="p-3 text-gray-700">{contract.contractID}</td>
                 <td className="p-3 text-gray-700">{contract.projectName}</td>
                 <td className="p-3 text-gray-700">{contract.contractor}</td>

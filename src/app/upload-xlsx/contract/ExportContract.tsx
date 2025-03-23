@@ -6,12 +6,15 @@ import { errorToast } from "../../../../config/toast";
 import { FiDownload } from "react-icons/fi";
 
 interface Contract {
+  id: number;
   batch: string;
+  year: string; // Added year field
   posting: string;
   preBid: string;
   bidding: string;
   contractID: string;
   projectName: string;
+  status: string;
   contractAmount?: string;
   contractor?: string;
   bidEvalStart?: string;
@@ -27,6 +30,7 @@ interface Contract {
 
 interface ExcelRow {
   "Batch No.": string;
+  "Year": string;
   "Posting Date": string;
   "Pre-Bid Date": string;
   "Bidding Date": string;
@@ -72,6 +76,7 @@ const ExportContracts: React.FC = () => {
       // Map the contracts data to the desired Excel row format
       const excelData: ExcelRow[] = contracts.map((contract) => ({
         "Batch No.": contract.batch,
+        "Year": contract.year, // Added year field
         "Posting Date": contract.posting,
         "Pre-Bid Date": contract.preBid,
         "Bidding Date": contract.bidding,
