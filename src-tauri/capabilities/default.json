@@ -6,11 +6,18 @@
     "main"
   ],
   "permissions": [
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "dialog:allow-save",
+    "dialog:allow-open",
     "core:default",
     "fs:default",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "$APPDATA/*" }]
+    },
     "sql:default",
     "sql:allow-execute",
-    "dialog:default",
     "dialog:default"
   ]
 }

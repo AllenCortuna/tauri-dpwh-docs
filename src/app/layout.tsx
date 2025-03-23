@@ -1,4 +1,4 @@
-import { Navbar } from "./component/Navbar";
+import { Navbar } from "./components/Navbar";
 import "./globals.css";
 import { Martian_Mono } from "next/font/google";
 

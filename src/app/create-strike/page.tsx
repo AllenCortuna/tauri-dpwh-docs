@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import CreatableSelect from "react-select/creatable";
-import BidderTable from "../component/BidderTable";
+import BidderTable from "../components/BidderTable";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
