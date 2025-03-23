@@ -6,19 +6,19 @@ import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
 
 interface Contractor {
-  email: string;
-  address: string;
-  amo: string;
-  designation: string;
+  email?: string;
+  address?: string;
+  amo?: string;
+  designation?: string;
   lastUpdated: string;
-  tin: string;
+  tin?: string;
   contractorName: string;
 }
 
 interface ExcelRow {
   "email": string;
-  "address": string;
-  "amo": string;
+  "address"?: string;
+  "amo"?: string;
   "designation": string;
   "tin": string;
   "contractorName": string;
@@ -117,6 +117,8 @@ const UploadContractor: React.FC = () => {
     setIsLoading(true);
     try {
       const db = await Database.load("sqlite:tauri.db");
+      let addedCount = 0;
+      let updatedCount = 0;
 
       for (const contractor of contractors) {
         // Check if contractor exists
@@ -147,6 +149,7 @@ const UploadContractor: React.FC = () => {
               contractor.email,
             ]
           );
+          updatedCount++;
         } else {
           // Insert new contractor
           await db.execute(
@@ -163,11 +166,13 @@ const UploadContractor: React.FC = () => {
               new Date().toISOString(),
             ]
           );
+          addedCount++;
         }
       }
 
       setContractors([]);
-      successToast("Contractors submitted successfully!");
+      successToast("Contractors submitted successfully! Added: " + addedCount + ", Updated: " + updatedCount);
+      console.log("Contractors submitted successfully! Added: " + addedCount + ", Updated: " + updatedCount);
     } catch (error: unknown) {
       if (error instanceof Error) {
         errorToast(error.message);

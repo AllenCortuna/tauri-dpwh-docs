@@ -11,6 +11,54 @@
   width: 4px; /* Width of the scrollbar */
   /* height: 4px; */
 }
+/* Calendar input styles for cross-browser compatibility */
+::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+  padding: 2px;
+  display: block !important; /* Force display on all browsers */
+  color-scheme: light; /* Ensures visibility in dark mode */
+  background-color: transparent;
+}
+
+input[type="date"] {
+  position: relative;
+  background-color: white;
+  padding: 4px 24px 4px 4px; /* Add right padding for the calendar icon */
+  color: #27272a;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-family: inherit;
+  appearance: none; /* Reset browser appearance */
+  -webkit-appearance: none; /* For Safari */
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-text {
+  padding: 0 2px;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  padding: 0;
+}
+
+/* Firefox specific styles */
+@-moz-document url-prefix() {
+  input[type="date"] {
+    min-height: 28px;
+  }
+}
+
+
 
 
 

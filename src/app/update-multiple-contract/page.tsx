@@ -70,7 +70,7 @@ const UpdateMultipleContract: React.FC = () => {
 
     setContractIDs([...contractIDs, trimmedID]);
     setNewContractID("");
-    successToast("Contract ID added successfully");
+    // successToast("Contract ID added successfully");
   };
 
   const handleRemoveContractID = (id: string) => {

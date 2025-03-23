@@ -224,7 +224,6 @@ const UploadExcel: React.FC = () => {
               ]
             );
             addedCount++;
-            successToast(`Added new contract: ${contract.contractID}`);
           }
         } catch (error) {
           console.error(`Error processing contract ${contract.contractID}:`, error);
