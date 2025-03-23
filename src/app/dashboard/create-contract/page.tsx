@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
-import { errorToast, successToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
+import { errorToast, successToast } from "../../../../config/toast";
 
 interface Contract {
   contractID: string;

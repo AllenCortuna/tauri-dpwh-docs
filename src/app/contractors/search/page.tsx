@@ -175,9 +175,10 @@ const SearchMailings: React.FC = () => {
             <tbody>
               {displayedMailings.map((mailing) => (
                 <tr key={mailing.id} className="text-xs text-zinc-500">
-                  <td className="uppercase">{mailing.contractorName}</td>
-                  <td className="flex flex-row items-center w-max">
+                  <td className="uppercase font-semibold text-zinc-600">{mailing.contractorName}</td>
+                  <td className=" w-max">
                     
+                    <div className="flex flex-row items-center">
                     {mailing.email && (
                       <button
                         className="btn btn-xs mr-2 text-neutral rounded-none btn-outline"
@@ -202,9 +203,11 @@ const SearchMailings: React.FC = () => {
                     >
                       {mailing.email}
                     </button>
+                    </div>
+
                   </td>
                   <td className="capitalize">{mailing.amo}</td>
-                  <td className="capitalize flex flex-row items-center w-max">
+                  <td className="capitalize w-max">
                     {mailing.tin}
                   </td>
                   <td className="capitalize">{mailing.address}</td>

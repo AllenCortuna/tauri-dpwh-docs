@@ -21,7 +21,7 @@ const SQLiteManager: React.FC = () => {
     e.preventDefault();
     
     // Check if password is correct
-    if (password === "OlsenPogi") {
+    if (password === "AllenCortuna") {
       setIsAuthenticated(true);
       setShowConfirmation(false);
     } else {
@@ -268,7 +268,7 @@ const SQLiteManager: React.FC = () => {
           <div className="space-y-6">
             {/* Database Actions */}
             <div className="space-y-4">
-              <h2 className="text-lg font-medium text-gray-700">Database Actions</h2>
+              <h2 className="text-sm font-medium text-gray-700">Database Actions</h2>
               
               <button
                 onClick={showResetConfirmation}
@@ -278,12 +278,12 @@ const SQLiteManager: React.FC = () => {
               </button>
               
               <div className="pt-4 border-t border-gray-200">
-                <h3 className="text-md font-medium text-gray-700 mb-3">Backup & Restore</h3>
+                <h3 className="text-sm mt-3 font-medium text-gray-700 mb-3">Backup & Restore</h3>
                 
                 <div className="flex gap-4">
                   <button
                     onClick={exportDatabase}
-                    className="btn btn-outline btn-primary flex-1"
+                    className="btn btn-outline text-neutral flex-1"
                     disabled={exportImportLoading}
                   >
                     {exportImportLoading ? "Processing..." : "Export"}
@@ -291,7 +291,7 @@ const SQLiteManager: React.FC = () => {
                   
                   <button
                     onClick={importDatabase}
-                    className="btn btn-outline btn-secondary flex-1"
+                    className="btn btn-outline text-neutral flex-1"
                     disabled={exportImportLoading}
                   >
                     {exportImportLoading ? "Processing..." : "Import"}
@@ -301,10 +301,10 @@ const SQLiteManager: React.FC = () => {
             </div>
             
             {/* Logout Button */}
-            <div className="pt-4 border-t border-gray-200">
+            <div className="pt-4 border-t flex items-center justify-center border-gray-200">
               <button
                 onClick={handleLogout}
-                className="btn btn-outline btn-sm w-full"
+                className="btn btn-error text-white mx-auto btn-sm mt-5"
               >
                 Logout
               </button>

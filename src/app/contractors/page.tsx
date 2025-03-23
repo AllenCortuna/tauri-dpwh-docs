@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Database from "@tauri-apps/plugin-sql";
 import Link from "next/link";
+import { FaUsers } from "react-icons/fa";
+import { errorToast, successToast } from "../../../config/toast";
 
 interface Contractor {
   contractorName: string;
@@ -49,7 +51,7 @@ const CreateContractors: React.FC = () => {
         console.log("Database and contractors table initialized successfully.");
       } catch (error) {
         console.error("Failed to initialize database:", error);
-        alert("Failed to initialize database.");
+        errorToast("Failed to initialize database.");
       }
     };
 
@@ -120,13 +122,13 @@ const CreateContractors: React.FC = () => {
         },
       ]);
 
-      alert("Contractors submitted successfully!");
+      successToast("Contractors submitted successfully!");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(`Error: ${error.message}`);
+        successToast(`Error: ${error.message}`);
       } else {
         console.error("An unknown error occurred:", error);
-        alert("An unknown error occurred.");
+        successToast("An unknown error occurred.");
       }
     } finally {
       setIsLoading(false);
@@ -140,6 +142,14 @@ const CreateContractors: React.FC = () => {
         onSubmit={handleSubmit}
       >
         <div className="flex gap-4 mb-4">
+          <Link
+            type="button"
+            className="fixed bottom-8 right-8 btn-neutral text-white btn text-xs hover:scale-125 transition-transform shadow-lg z-50"
+            href="/contractors/search"
+          >
+            <FaUsers className="mr-2 text-2xl" /> Contractor List
+          </Link>
+
           <button
             type="button"
             className="btn btn-outline text-neutral text-xs"
@@ -147,13 +157,6 @@ const CreateContractors: React.FC = () => {
           >
             Add Another Contractor
           </button>
-          <Link
-            type="button"
-            className="btn btn-outline text-neutral text-xs"
-            href="/contractors/search"
-          >
-            Contractor List
-          </Link>
 
           <button
             type="submit"

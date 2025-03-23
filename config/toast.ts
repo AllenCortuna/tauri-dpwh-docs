@@ -7,7 +7,7 @@ export const successToast = (text: string) => toast.success(text, {
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-    theme: "colored",
+    theme: "light",
     // transition: Bounce,
     });
 
@@ -19,6 +19,6 @@ export const errorToast = (text: string) => toast.error(text, {
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-    theme: "colored",
+    theme: "light",
     // transition: Bounce,
     });

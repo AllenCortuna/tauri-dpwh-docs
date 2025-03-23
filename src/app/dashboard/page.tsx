@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
   const yearOptions = Array.from({ length: 6 }, (_, i) => currentYearNum - i);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto overflow-y-scroll">
       <div className="flex justify-between items-center mb-8">
         {/* Replaced with NavLinks component */}
         <NavLinks />
@@ -166,9 +166,7 @@ const Dashboard: React.FC = () => {
 
             {/* Total Contractors Card */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-              <h2 className="text-gray-500 text-sm mb-2">
-                Total Contractors
-              </h2>
+              <h2 className="text-gray-500 text-sm mb-2">Total Contractors</h2>
               <p className="text-[2rem] font-bold text-gray-700">
                 {stats.totalContractors}
               </p>
@@ -199,7 +197,9 @@ const Dashboard: React.FC = () => {
                   </span>
                 </div>
                 <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
-                  <span className="font-medium text-sm text-gray-600">Total for {currentYear}</span>
+                  <span className="font-medium text-sm text-gray-600">
+                    Total for {currentYear}
+                  </span>
                   <span className="font-bold text-gray-600">
                     {stats.totalPostedCurrentYear +
                       stats.totalAwardedCurrentYear +

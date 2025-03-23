@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { ToastContainer } from "react-toastify";
-import { errorToast, successToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
+import { errorToast, successToast } from "../../../../config/toast";
 
 interface UpdateFormData {
   bidEvalStart: string;
@@ -179,7 +179,7 @@ const UpdateMultipleContract: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <div className="w-full max-w-4xl space-y-6">
-        <h1 className="text-2xl font-bold text-center mb-8">
+        <h1 className="text-2xl text-neutral font-bold text-center mb-8">
           Update Multiple Contracts
         </h1>
 
@@ -225,7 +225,7 @@ const UpdateMultipleContract: React.FC = () => {
           onSubmit={handleSubmit}
           className="bg-white p-6 text-xs rounded-lg shadow-md space-y-4"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 gap-y-8">
             <div className="block">
               <span className="font-medium text-gray-500">
                 Bid Evaluation Start

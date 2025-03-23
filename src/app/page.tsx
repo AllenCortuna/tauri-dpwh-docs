@@ -27,7 +27,7 @@ export default function Home() {
       icon: <FaStamp className="w-6 h-6" />,
       title: "PIO Certification",
       subtitle: "Generate certification documents",
-      href: "/",
+      href: "/create-pio-memo",
     },
     {
       icon: <FaExclamationCircle className="w-6 h-6" />,
@@ -45,13 +45,19 @@ export default function Home() {
       icon: <FaFileSignature className="w-6 h-6" />,
       title: "Contract",
       subtitle: "Create Infrastructure contracts",
-      href: "/create-contract",
+      href: "/dashboard/create-contract",
     },
     {
       icon: <FaEdit className="w-6 h-6" />,
       title: "Update Contract",
       subtitle: "Update Infrastructure contracts",
-      href: "/update-contract",
+      href: "/dashboard/update-contract",
+    },
+    {
+      icon: <FaLayerGroup className="w-6 h-6" />,
+      title: "Update Multiple Contracts",
+      subtitle: "Update Multiple Contracts at once",
+      href: "/dashboard/update-multiple-contract",
     },
     {
       icon: <FaShieldAlt className="w-6 h-6" />,
@@ -71,25 +77,17 @@ export default function Home() {
       subtitle: "Create bid receipts",
       href: "/create-bid-receipt",
     },
-    //contractors
     {
       icon: <FaUsers className="w-6 h-6" />,
       title: "Contractors",
       subtitle: "Manage contractor records",
       href: "/contractors",
     },
-    //sql
     {
       icon: <FaDatabase className="w-6 h-6" />,
       title: "Database",
       subtitle: "Manage SQL queries and backup",
       href: "/sqlite",
-    },
-    {
-      icon: <FaLayerGroup className="w-6 h-6" />,
-      title: "Update Multiple Contracts",
-      subtitle: "Update Multiple Contracts at once",
-      href: "/update-multiple-contract",
     },
   ];
 
