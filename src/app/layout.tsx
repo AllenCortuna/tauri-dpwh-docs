@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${font.className} flex flex-col w-screen h-screen`}>
         <Navbar />
-        <main className="flex flex-col justify-center items-center overflow-x-hidden">
+        <main className="flex flex-col justify-start items-center overflow-x-hidden overflow-y-scroll">
           {children}
         </main>
       </body>

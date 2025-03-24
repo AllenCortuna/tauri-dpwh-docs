@@ -8,7 +8,7 @@ import CreatableSelect from "react-select/creatable";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { successToast, errorToast } from "../../../config/toast";
-import { dateSuffix, formatDate } from "../../../config/convertToDate";
+import { formatDate, suffix } from "../../../config/convertToDate";
 
 // Define interfaces for our data structures
 export interface Contract {
@@ -18,19 +18,20 @@ export interface Contract {
 
 interface FormData {
   certType: string;
-  memoDate: string;
   startDate: string;
   endDate: string;
-  certDate: string;
+  issueDate: string;
 }
 interface DocumentData {
   certType: string;
-  memoDate: string;
   startDate: string;
   endDate: string;
-  certDate: string;
+  issueDate: string;
   day?: string;
   month?: string;
+  projectType?: string;
+  year?: string;
+  suffix?: string;
   table: Contract[];
 }
 
@@ -44,10 +45,9 @@ const Folder: React.FC = () => {
   const [inputArr, setInputArr] = useState<Contract[]>([]);
   const [data, setData] = useState<FormData>({
     certType: "",
-    memoDate: "",
     startDate: "",
     endDate: "",
-    certDate: "",
+    issueDate: "",
   });
 
   const options: SelectOption[] = [
@@ -146,36 +146,21 @@ const Folder: React.FC = () => {
       if (Object.values(data).some((value) => value === "") || !inputArr[0]) {
         toast.error("Hindi kumpleto ang mga input fields!");
       } else {
-        //MEMO
-        await generateDocument(
-          "pioMemoTemplate",
-          {
-            certType: data.certType,
-            memoDate: formatDate(data.memoDate),
-            startDate: formatDate(data.startDate),
-            endDate: formatDate(data.endDate),
-            certDate: formatDate(data.certDate),
-            table: inputArr,
-          },
-          `MEMO ${inputArr
-            .slice(0, 5)
-            .map((item) => item.contractID)
-            .join(", ")} ${data.certType.toUpperCase()}.docx`
-        );
-
         //CERT
         await generateDocument(
-          "pioCertTemplate",
+          "pioTemplate",
           {
             certType: data.certType,
-            memoDate: formatDate(data.memoDate),
             startDate: formatDate(data.startDate),
             endDate: formatDate(data.endDate),
-            certDate: formatDate(data.certDate),
-            day: dateSuffix(data.certDate),
-            month: new Date(data.certDate).toLocaleString("default", {
+            issueDate: formatDate(data.issueDate),
+            day: new Date(data.issueDate).getDate().toString(),
+            suffix: suffix(new Date(data.issueDate)),
+            projectType: inputArr[0].contractID.substring(2,4).toUpperCase() == "EB" ? "projects" : "goods",
+            month: new Date(data.issueDate).toLocaleString("default", {
               month: "long",
             }),
+            year: new Date(data.issueDate).getFullYear().toString(),
             table: inputArr,
           },
           `CERT ${inputArr
@@ -206,17 +191,6 @@ const Folder: React.FC = () => {
         />
         <div className="flex gap-10">
           <span className="gap-2 flex flex-col">
-            <p className="primary-text ml-1">Memo Date: </p>
-            <input
-              name="memoDate"
-              value={data?.memoDate}
-              onChange={handleDate}
-              className="custom-input w-52"
-              type="date"
-            />
-          </span>
-
-          <span className="gap-2 flex flex-col">
             <p className="primary-text ml-1">Start Date: </p>
             <input
               name="startDate"
@@ -240,8 +214,8 @@ const Folder: React.FC = () => {
           <span className="gap-2 flex flex-col">
             <p className="primary-text ml-1">Cert Date: </p>
             <input
-              name="certDate"
-              value={data?.certDate}
+              name="issueDate"
+              value={data?.issueDate}
               onChange={handleDate}
               className="custom-input w-52"
               type="date"

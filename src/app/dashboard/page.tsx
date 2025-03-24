@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
   const yearOptions = Array.from({ length: 6 }, (_, i) => currentYearNum - i);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto overflow-y-scroll">
+    <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         {/* Replaced with NavLinks component */}
         <NavLinks />

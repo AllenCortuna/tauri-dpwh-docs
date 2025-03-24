@@ -30,6 +30,12 @@ export default function Home() {
       href: "/create-pio-memo",
     },
     {
+      icon: <FaEdit className="w-6 h-6" />,
+      title: "Certification ni Amica",
+      subtitle: "Generate PIO certification documents",
+      href: "/create-pio-ney",
+    },
+    {
       icon: <FaExclamationCircle className="w-6 h-6" />,
       title: "3 Strike Policy",
       subtitle: "Manage compliance warnings",
@@ -46,12 +52,6 @@ export default function Home() {
       title: "Contract",
       subtitle: "Create Infrastructure contracts",
       href: "/dashboard/create-contract",
-    },
-    {
-      icon: <FaEdit className="w-6 h-6" />,
-      title: "Update Contract",
-      subtitle: "Update Infrastructure contracts",
-      href: "/dashboard/update-contract",
     },
     {
       icon: <FaLayerGroup className="w-6 h-6" />,

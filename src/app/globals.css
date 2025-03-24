@@ -8,7 +8,7 @@
 }
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 4px; /* Width of the scrollbar */
+  width: 2px; /* Width of the scrollbar */
   /* height: 4px; */
 }
 /* Calendar input styles for cross-browser compatibility */

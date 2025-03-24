@@ -260,7 +260,7 @@ const UploadExcel: React.FC = () => {
         errorToast(error.message);
       } else {
         console.error(error);
-        errorToast("An unknown error occurred.");
+        errorToast(`An error occurred : ${error}`);
       }
     } finally {
       setIsLoading(false);
