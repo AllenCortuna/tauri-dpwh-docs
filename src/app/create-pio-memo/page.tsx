@@ -25,6 +25,7 @@ interface FormData {
 }
 interface DocumentData {
   certType: string;
+  certTypeUpper?: string;
   memoDate: string;
   startDate: string;
   endDate: string;
@@ -151,6 +152,7 @@ const Folder: React.FC = () => {
           "pioMemoTemplate",
           {
             certType: data.certType,
+            certTypeUpper: data.certType.toUpperCase(),
             memoDate: formatDate(data.memoDate),
             startDate: formatDate(data.startDate),
             endDate: formatDate(data.endDate),
