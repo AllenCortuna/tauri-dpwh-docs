@@ -32,6 +32,9 @@ interface Contract {
 }
 
 const SearchContracts: React.FC = () => {
+  // Add new state for year filter
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchType, setSearchType] = useState<
@@ -43,10 +46,14 @@ const SearchContracts: React.FC = () => {
   const contractsPerPage = 10;
 
   // Fetch all contracts from the database
+  // Modify fetchContracts to include year filter
   const fetchContracts = async () => {
     try {
       const db = await Database.load("sqlite:tauri.db");
-      const result = await db.select<Contract[]>("SELECT * FROM contracts");
+      const result = await db.select<Contract[]>(
+        "SELECT * FROM contracts WHERE year = ?",
+        [selectedYear]
+      );
       setContracts(result);
     } catch (error) {
       toast.error("Failed to fetch contracts.");
@@ -56,14 +63,16 @@ const SearchContracts: React.FC = () => {
 
   useEffect(() => {
     fetchContracts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle search
+  // Modify handleSearch to include year filter
   const handleSearch = async () => {
     try {
       const db = await Database.load("sqlite:tauri.db");
-      let query = "SELECT * FROM contracts WHERE ";
-      const params: string[] = [];
+      let query = "SELECT * FROM contracts WHERE year = ? AND ";
+      const params: string[] = [selectedYear];
 
       switch (searchType) {
         case "batch":
@@ -201,8 +210,25 @@ const SearchContracts: React.FC = () => {
     <div className="p-10 bg-gray-50 min-h-screen w-full">
       <h1 className="text-xl font-bold mb-8 text-gray-800">Search Contracts</h1>
 
-      {/* Search Bar */}
+      {/* Existing Search Bar */}
       <div className="flex gap-4 mb-8">
+      <select
+          value={selectedYear}
+          onChange={(e) => {
+            setSelectedYear(e.target.value);
+            setCurrentPage(0);
+          }}
+          className="select select-bordered select-sm bg-white"
+        >
+          {Array.from({ length: 5 }, (_, i) => {
+            const year = new Date().getFullYear() - i;
+            return (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            );
+          })}
+        </select>
         <select
           value={searchType}
           onChange={(e) =>
@@ -210,10 +236,9 @@ const SearchContracts: React.FC = () => {
               e.target.value as "batch" | "year" | "contractID" | "bidding" | "projectName" | "contractor"
             )
           }
-          className="custom-input w-52"
+          className="select select-bordered select-sm bg-white"
         >
           <option value="batch">Batch</option>
-          <option value="year">Year</option>
           <option value="contractID">Contract ID</option>
           <option value="bidding">Bidding</option>
           <option value="projectName">Project Name</option>

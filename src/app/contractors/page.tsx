@@ -119,7 +119,7 @@ const ContractorsDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-gray-500 text-sm mb-2">
+                  <h2 className="text-gray-500 text-xs mb-2">
                     Total Contractors
                   </h2>
                   <p className="text-2xl font-bold text-gray-700">
@@ -134,7 +134,7 @@ const ContractorsDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-emerald-600">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-gray-500 text-sm mb-2">With Email</h2>
+                  <h2 className="text-gray-500 text-xs mb-2">With Email</h2>
                   <p className="text-2xl font-bold text-gray-700">
                     {stats.totalWithEmail}
                   </p>
@@ -147,7 +147,7 @@ const ContractorsDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-600">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-gray-500 text-sm mb-2">With TIN</h2>
+                  <h2 className="text-gray-500 text-xs mb-2">With TIN</h2>
                   <p className="text-2xl font-bold text-gray-700">
                     {stats.totalWithTIN}
                   </p>
@@ -160,7 +160,7 @@ const ContractorsDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-fuchsia-600">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-gray-500 text-sm mb-2">With AMO</h2>
+                  <h2 className="text-gray-500 text-xs mb-2">With AMO</h2>
                   <p className="text-2xl font-bold text-gray-700">
                     {stats.totalWithAMO}
                   </p>
@@ -173,7 +173,7 @@ const ContractorsDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-rose-600">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-gray-500 text-sm mb-2">
+                  <h2 className="text-gray-500 text-xs mb-2">
                     With Designation
                   </h2>
                   <p className="text-2xl font-bold text-gray-700">
@@ -187,13 +187,13 @@ const ContractorsDashboard: React.FC = () => {
 
           {/* Recent Contractors Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            <h2 className="text-xl font-semibold text-gray-700 mb-7">
               Recently Updated Contractors
             </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
-                  <tr className="text-sm text-neutral">
+                  <tr className="text-xs text-neutral">
                     <th className="px-6 py-3 text-left">Contractor Name</th>
                     <th className="px-6 py-3 text-left">Email</th>
                     <th className="px-6 py-3 text-left">AMO</th>
