@@ -116,7 +116,7 @@ const UpdateMultipleContract: React.FC = () => {
 
       // Add status update logic
       let status = null;
-      if (formData.noa && formData.ntp) {
+      if (formData.ntp) {
         status = "proceed";
       } else if (formData.noa) {
         status = "awarded";

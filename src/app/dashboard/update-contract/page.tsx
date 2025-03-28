@@ -134,7 +134,7 @@ const SearchContracts: React.FC = () => {
   
       // Determine status based on noa and ntp
       let status = "posted";
-      if (editFormData?.noa && editFormData?.ntp) {
+      if (editFormData?.ntp) {
         status = "proceed";
       } else if (editFormData?.noa) {
         status = "awarded";

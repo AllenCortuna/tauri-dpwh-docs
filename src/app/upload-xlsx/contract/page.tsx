@@ -150,7 +150,7 @@ const UploadExcel: React.FC = () => {
         try {
           // Determine status based on noa and ntp
           let status = "posted";
-          if (contract.noa && contract.ntp) {
+          if (contract.ntp) {
             status = "proceed";
           } else if (contract.noa) {
             status = "awarded";
