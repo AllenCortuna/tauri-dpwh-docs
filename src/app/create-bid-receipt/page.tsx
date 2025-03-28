@@ -245,7 +245,7 @@ const CreateBidReceipt = () => {
       await generateDocument(
         "bidReceiptTemplate",
         commonData,
-        `${data.contractID} ${data.contractor} BID RECEIPT.docx`
+        `${data.contractor} ${data.contractID} BID RECEIPT.docx`
       );
     } catch (error) {
       console.error("Error processing request:", error);
@@ -258,7 +258,7 @@ const CreateBidReceipt = () => {
   return (
     <div className="flex flex-col w-screen p-10 justify-center">
       <ToastContainer />
-      <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 min-w-[60rem] mx-auto">
+      <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 min-w-[60rem] mx-auto bg-white p-10">
         <div className="relative">
           <input
             name="contractID"

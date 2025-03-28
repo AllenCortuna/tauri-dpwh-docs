@@ -22,6 +22,12 @@ const NavLinks: React.FC = () => {
       >
         create
       </Link>
+      <Link
+        href="/dashboard/search-contract"
+        className="px-3 py-2 rounded-md text-xs font-bold text-gray-700 hover:text-gray-900 bg-gray-50 hover:bg-primary hover:btn-outline transition-colors"
+      >
+        search
+      </Link>
     </div>
   );
 };

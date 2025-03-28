@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 export const successToast = (text: string) => toast.success(text, {
-    position: "top-center",
+    position: "top-left",
     autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: true,
@@ -8,11 +8,10 @@ export const successToast = (text: string) => toast.success(text, {
     draggable: true,
     progress: undefined,
     theme: "light",
-    // transition: Bounce,
     });
 
 export const errorToast = (text: string) => toast.error(text, {
-    position: "top-center",
+    position: "top-left",
     autoClose: 5000,
     hideProgressBar: false,
     closeOnClick: true,
@@ -20,5 +19,4 @@ export const errorToast = (text: string) => toast.error(text, {
     draggable: true,
     progress: undefined,
     theme: "light",
-    // transition: Bounce,
     });

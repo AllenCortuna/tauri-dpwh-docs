@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import NavLinks from "../components/NavLinks";
+import NavLinks from "../components/ContractNav";
 
 interface Contract {
   id: number;

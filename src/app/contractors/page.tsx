@@ -1,252 +1,232 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Database from "@tauri-apps/plugin-sql";
-import Link from "next/link";
-import { FaUsers } from "react-icons/fa";
-import { errorToast, successToast } from "../../../config/toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { FaUsers, FaUserTie, FaBuilding } from "react-icons/fa";
+import { BsPersonVcard } from "react-icons/bs";
+import { MdEmail } from "react-icons/md";
+// Update imports at the top
+import ContractorNav from "../components/ContractorNav";
+
+// Remove these imports as they're no longer needed here
+// import Link from "next/link";
+// import { FaPlus, FaSearch, FaHome } from "react-icons/fa";
+
+interface ContractorStats {
+  totalContractors: number;
+  totalWithEmail: number;
+  totalWithTIN: number;
+  totalWithAMO: number;
+  totalWithDesignation: number;
+}
 
 interface Contractor {
+  id: number;
   contractorName: string;
-  address: string;
   email: string;
   amo: string;
   designation: string;
   tin: string;
+  address: string;
+  lastUpdated: string;
 }
 
-const CreateContractors: React.FC = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const ContractorsDashboard: React.FC = () => {
+  const [stats, setStats] = useState<ContractorStats>({
+    totalContractors: 0,
+    totalWithEmail: 0,
+    totalWithTIN: 0,
+    totalWithAMO: 0,
+    totalWithDesignation: 0,
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [recentContractors, setRecentContractors] = useState<Contractor[]>([]);
 
-  const [contractors, setContractors] = useState<Contractor[]>([
-    {
-      contractorName: "",
-      address: "",
-      email: "",
-      amo: "",
-      designation: "",
-      tin: "",
-    },
-  ]);
-
-  // Initialize the database and create the table if it doesn't exist
   useEffect(() => {
-    const initializeDatabase = async () => {
+    const fetchContractorStats = async () => {
       try {
+        setIsLoading(true);
         const db = await Database.load("sqlite:tauri.db");
 
-        // Create the contractors table if it doesn't exist
-        await db.execute(`
-          CREATE TABLE IF NOT EXISTS contractors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contractorName TEXT NOT NULL,
-            address TEXT NOT NULL,
-            email TEXT,
-            amo TEXT,
-            designation TEXT,
-            tin TEXT,
-            lastUpdated TEXT NOT NULL
-          );
-        `);
+        // Get total contractors
+        const totalContractorsResult = await db.select<[{ count: number }]>(
+          "SELECT COUNT(*) as count FROM contractors"
+        );
 
-        console.log("Database and contractors table initialized successfully.");
+        // Get contractors with email
+        const withEmailResult = await db.select<[{ count: number }]>(
+          "SELECT COUNT(*) as count FROM contractors WHERE email IS NOT NULL AND email != ''"
+        );
+
+        // Get contractors with TIN
+        const withTINResult = await db.select<[{ count: number }]>(
+          "SELECT COUNT(*) as count FROM contractors WHERE tin IS NOT NULL AND tin != ''"
+        );
+
+        // Get contractors with AMO
+        const withAMOResult = await db.select<[{ count: number }]>(
+          "SELECT COUNT(*) as count FROM contractors WHERE amo IS NOT NULL AND amo != ''"
+        );
+
+        // Get contractors with Designation
+        const withDesignationResult = await db.select<[{ count: number }]>(
+          "SELECT COUNT(*) as count FROM contractors WHERE designation IS NOT NULL AND designation != ''"
+        );
+
+        // Get recent contractors
+        const recentContractorsResult = await db.select<Contractor[]>(
+          "SELECT * FROM contractors ORDER BY lastUpdated DESC LIMIT 5"
+        );
+
+        setStats({
+          totalContractors: totalContractorsResult[0]?.count || 0,
+          totalWithEmail: withEmailResult[0]?.count || 0,
+          totalWithTIN: withTINResult[0]?.count || 0,
+          totalWithAMO: withAMOResult[0]?.count || 0,
+          totalWithDesignation: withDesignationResult[0]?.count || 0,
+        });
+
+        setRecentContractors(recentContractorsResult);
       } catch (error) {
-        console.error("Failed to initialize database:", error);
-        errorToast("Failed to initialize database.");
+        console.error("Error fetching contractor stats:", error);
+        toast.error("Failed to fetch contractor statistics");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initializeDatabase();
+    fetchContractorStats();
   }, []);
 
-  const handleContractorChange = (
-    index: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    const updatedContractors = contractors.map((contractor, i) =>
-      i === index ? { ...contractor, [name]: value } : contractor
-    );
-    setContractors(updatedContractors);
-  };
-
-  const addContractor = () => {
-    setContractors([
-      {
-        contractorName: "",
-        address: "",
-        email: "",
-        amo: "",
-        designation: "",
-        tin: "",
-      },
-      ...contractors,
-    ]);
-  };
-
-  const removeContractor = (index: number) => {
-    setContractors(contractors.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setIsLoading(true);
-    try {
-      const db = await Database.load("sqlite:tauri.db");
-
-      for (const contractor of contractors) {
-        await db.execute(
-          `INSERT INTO contractors (
-            contractorName, address, email, amo, designation, tin, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            contractor.contractorName,
-            contractor.address,
-            contractor.email,
-            contractor.amo,
-            contractor.designation,
-            contractor.tin,
-            new Date().toISOString(),
-          ]
-        );
-      }
-
-      setContractors([
-        {
-          contractorName: "",
-          address: "",
-          email: "",
-          amo: "",
-          designation: "",
-          tin: "",
-        },
-      ]);
-
-      successToast("Contractors submitted successfully!");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        successToast(`Error: ${error.message}`);
-      } else {
-        console.error("An unknown error occurred:", error);
-        successToast("An unknown error occurred.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="flex flex-col w-screen p-10 justify-center">
-      <form
-        className="flex flex-col gap-8 min-w-[60rem] mx-auto mt-20"
-        onSubmit={handleSubmit}
-      >
-        <div className="flex gap-4 mb-4">
-          <Link
-            type="button"
-            className="fixed bottom-8 right-8 btn-neutral text-white btn text-xs hover:scale-125 transition-transform shadow-lg z-50"
-            href="/contractors/search"
-          >
-            <FaUsers className="mr-2 text-2xl" /> Contractor List
-          </Link>
-
-          <button
-            type="button"
-            className="btn btn-outline text-neutral text-xs"
-            onClick={addContractor}
-          >
-            Add Another Contractor
-          </button>
-
-          <button
-            type="submit"
-            className={`btn ${
-              isLoading ? "btn-disable" : "btn-neutral"
-            } text-xs`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Submitting..." : "Submit Contractors"}
-          </button>
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 w-full">
+          <ContractorNav />
+          <h1 className="text-2xl font-bold text-gray-700">Contractors Dashboard</h1>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {[...contractors].reverse().map((contractor, index) => {
-            const originalIndex = contractors.length - 1 - index;
-            return (
-              <div
-                key={originalIndex}
-                className="flex flex-col gap-4 border p-4 rounded-none bg-white"
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-neutral font-semibold">
-                    Contractor {originalIndex + 1}
-                  </h3>
-                  {contractors.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn btn-error btn-xs text-white"
-                      onClick={() => removeContractor(originalIndex)}
-                    >
-                      Remove
-                    </button>
-                  )}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* Total Contractors Card */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-gray-500 text-sm mb-2">
+                    Total Contractors
+                  </h2>
+                  <p className="text-2xl font-bold text-gray-700">
+                    {stats.totalContractors}
+                  </p>
                 </div>
-
-                <input
-                  name="contractorName"
-                  value={contractor.contractorName.toUpperCase()}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="text"
-                  placeholder="Contractor Name"
-                />
-                <input
-                  name="address"
-                  value={contractor.address}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="text"
-                  placeholder="Address"
-                />
-                <input
-                  name="email"
-                  value={contractor.email}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="email"
-                  placeholder="Email Address"
-                />
-                <input
-                  name="tin"
-                  value={contractor.tin}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="text"
-                  placeholder="TIN Number"
-                />
-                <input
-                  name="amo"
-                  value={contractor.amo}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="text"
-                  placeholder="AMO"
-                />
-                <input
-                  name="designation"
-                  value={contractor.designation}
-                  onChange={(e) => handleContractorChange(originalIndex, e)}
-                  className="custom-input w-full"
-                  type="text"
-                  placeholder="Designation"
-                />
+                <FaUsers className="text-4xl text-indigo-600 opacity-70" />
               </div>
-            );
-          })}
-        </div>
-      </form>
+            </div>
+
+            {/* Contractors with Email */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-emerald-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-gray-500 text-sm mb-2">With Email</h2>
+                  <p className="text-2xl font-bold text-gray-700">
+                    {stats.totalWithEmail}
+                  </p>
+                </div>
+                <MdEmail className="text-4xl text-emerald-600 opacity-70" />
+              </div>
+            </div>
+
+            {/* Contractors with TIN */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-gray-500 text-sm mb-2">With TIN</h2>
+                  <p className="text-2xl font-bold text-gray-700">
+                    {stats.totalWithTIN}
+                  </p>
+                </div>
+                <BsPersonVcard className="text-4xl text-amber-600 opacity-70" />
+              </div>
+            </div>
+
+            {/* Contractors with AMO */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-fuchsia-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-gray-500 text-sm mb-2">With AMO</h2>
+                  <p className="text-2xl font-bold text-gray-700">
+                    {stats.totalWithAMO}
+                  </p>
+                </div>
+                <FaUserTie className="text-4xl text-fuchsia-600 opacity-70" />
+              </div>
+            </div>
+
+            {/* Contractors with Designation */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-rose-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-gray-500 text-sm mb-2">
+                    With Designation
+                  </h2>
+                  <p className="text-2xl font-bold text-gray-700">
+                    {stats.totalWithDesignation}
+                  </p>
+                </div>
+                <FaBuilding className="text-4xl text-rose-600 opacity-70" />
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Contractors Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mt-8">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              Recently Updated Contractors
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="text-sm text-neutral">
+                    <th className="px-6 py-3 text-left">Contractor Name</th>
+                    <th className="px-6 py-3 text-left">Email</th>
+                    <th className="px-6 py-3 text-left">AMO</th>
+                    <th className="px-6 py-3 text-left">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200 text-xs">
+                  {recentContractors.map((contractor) => (
+                    <tr key={contractor.id}>
+                      <td className="px-6 py-4 uppercase font-semibold text-zinc-600">
+                        {contractor.contractorName}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">
+                        {contractor.email}
+                      </td>
+                      <td className="px-6 py-4 capitalize text-gray-500">
+                        {contractor.amo}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">
+                        {new Date(contractor.lastUpdated).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      <ToastContainer />
     </div>
   );
 };
 
-export default CreateContractors;
+export default ContractorsDashboard;

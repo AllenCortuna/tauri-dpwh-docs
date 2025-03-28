@@ -2,13 +2,18 @@
 import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import Database from "@tauri-apps/plugin-sql";
-import { confirm } from '@tauri-apps/plugin-dialog';
+import { confirm } from "@tauri-apps/plugin-dialog";
+import { useCallback } from "react";
+import debounce from "lodash/debounce";
+import { successToast } from "../../../../config/toast";
+import { ToastContainer } from "react-toastify";
 
 interface Mailing {
   id: number;
   contractorName: string;
   email: string;
   amo: string;
+  designation: string;
   tin: string;
   address: string;
   lastUpdated: string;
@@ -33,21 +38,21 @@ const SearchMailings: React.FC = () => {
         console.error("Database connection error:", error);
       }
     };
-    
+
     initializeDatabase();
   }, []);
 
   const handleSearch = async () => {
     try {
       const db = await Database.load("sqlite:tauri.db");
-      
+
       // Build the SQL query based on the search field and term
       const query = `SELECT * FROM contractors WHERE ${searchField} LIKE ?`;
       const searchPattern = `%${searchTerm}%`;
-      
+
       // Execute the query
       const result = await db.select<Mailing[]>(query, [searchPattern]);
-      
+
       // Update state with results
       setMailings(result);
       setTotalPages(Math.ceil(result.length / itemsPerPage));
@@ -62,7 +67,7 @@ const SearchMailings: React.FC = () => {
 
     try {
       const db = await Database.load("sqlite:tauri.db");
-      
+
       // Update the contractor in the database
       await db.execute(
         `UPDATE contractors SET 
@@ -80,7 +85,7 @@ const SearchMailings: React.FC = () => {
           selectedMailing.tin,
           selectedMailing.address,
           new Date().toISOString(),
-          selectedMailing.id
+          selectedMailing.id,
         ]
       );
 
@@ -96,25 +101,22 @@ const SearchMailings: React.FC = () => {
 
   const handleDeleteMailing = async (id: number) => {
     // Get the contractor name for the confirmation message
-    const contractor = mailings.find(m => m.id === id);
+    const contractor = mailings.find((m) => m.id === id);
     if (!contractor) return;
 
     // Show confirmation dialog
     const confirmation = await confirm(
       `This action cannot be reverted. Are you sure you want to delete ${contractor.contractorName}?`,
-      { title: 'Tauri', kind: 'warning' }
+      { title: "Tauri", kind: "warning" }
     );
 
     if (!confirmation) return;
 
     try {
       const db = await Database.load("sqlite:tauri.db");
-      
+
       // Delete the contractor from the database
-      await db.execute(
-        `DELETE FROM contractors WHERE id = ?`,
-        [id]
-      );
+      await db.execute(`DELETE FROM contractors WHERE id = ?`, [id]);
 
       // Refresh search results
       handleSearch();
@@ -132,13 +134,50 @@ const SearchMailings: React.FC = () => {
     setCurrentPage(data.selected);
   };
 
+  // Create a debounced search function
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSearch = useCallback(
+    debounce(async (term: string, field: string) => {
+      try {
+        const db = await Database.load("sqlite:tauri.db");
+        const query = `SELECT * FROM contractors WHERE ${field} LIKE ?`;
+        const searchPattern = `%${term}%`;
+        const result = await db.select<Mailing[]>(query, [searchPattern]);
+
+        setMailings(result);
+        setTotalPages(Math.ceil(result.length / itemsPerPage));
+        setCurrentPage(0);
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    }, 300), // 300ms delay
+    []
+  );
+
+  // Update the input handler
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value =
+      searchField === "contractorName"
+        ? e.target.value.toUpperCase()
+        : e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value, searchField);
+  };
+
+  // Update the select handler
+  const handleFieldChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchField(e.target.value);
+    debouncedSearch(searchTerm, e.target.value);
+  };
+
   return (
     <div className="container mx-auto p-4">
+      <ToastContainer />
       <div className="flex mb-4 gap-2">
         <select
           value={searchField}
-          onChange={(e) => setSearchField(e.target.value)}
-          className="select text-sm select-bordered w-1/8"
+          onChange={handleFieldChange}
+          className="custom-input w-52"
         >
           <option value="contractorName">Contractor Name</option>
           <option value="email">Email</option>
@@ -146,17 +185,12 @@ const SearchMailings: React.FC = () => {
         </select>
         <input
           type="text"
-          value={searchField == "contractorName" ? searchTerm.toUpperCase() : searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchTerm}
+          onChange={handleSearchInput}
           placeholder="Search..."
-          className="input text-sm input-bordered w-1/3"
+          className="custom-input w-1/3"
         />
-        <button
-          onClick={handleSearch}
-          className="btn btn-neutral text-sm text-white"
-        >
-          Search
-        </button>
+        {/* Remove the search button since search is now automatic */}
       </div>
 
       {mailings.length > 0 ? (
@@ -168,69 +202,60 @@ const SearchMailings: React.FC = () => {
                 <th>Email</th>
                 <th>AMO</th>
                 <th>TIN</th>
-                <th>Address</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {displayedMailings.map((mailing) => (
                 <tr key={mailing.id} className="text-xs text-zinc-500">
-                  <td className="uppercase font-semibold text-zinc-600">{mailing.contractorName}</td>
+                  <td className="uppercase font-semibold text-zinc-600">
+                    <button
+                      data-tip="Copy to clipboard"
+                      className="btn btn-xs mr-2 w-80 text-left text-neutral border-none tooltip tooltip-top rounded-none btn-outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(mailing.contractorName);
+                        successToast(
+                          `${mailing.contractorName} copied to clipboard`
+                        );
+                      }}
+                    >
+                      {mailing.contractorName}
+                    </button>
+                  </td>
                   <td className=" w-max">
-                    
-                    <div className="flex flex-row items-center">
-                    {mailing.email && (
-                      <button
-                        className="btn btn-xs mr-2 text-neutral rounded-none btn-outline"
-                        onClick={() => {
-                          window.open(
-                            `https://compose.mail.yahoo.com/?to=${mailing.email}`,
-                            "_blank"
-                          );
-                        }}
-                      >
-                        yahoo
-                      </button>
-                    )}
-
                     <button
                       data-tip="Copy to clipboard"
                       className="btn btn-xs mr-2 text-neutral border-none tooltip tooltip-top rounded-none btn-outline "
                       onClick={() => {
                         navigator.clipboard.writeText(mailing.email);
-                        alert("Email copied to clipboard");
+                        successToast(`${mailing.email} copied to clipboard`);
                       }}
                     >
                       {mailing.email}
                     </button>
-                    </div>
-
                   </td>
                   <td className="capitalize">{mailing.amo}</td>
-                  <td className="capitalize w-max">
-                    {mailing.tin}
-                  </td>
-                  <td className="capitalize">{mailing.address}</td>
+                  <td className="capitalize w-max">{mailing.tin}</td>
                   <td className="flex gap-2">
-                      <button
-                        className="btn btn-xs text-neutral btn-outline rounded-none"
-                        onClick={() => {
-                          setSelectedMailing(mailing);
-                          (
-                            document.getElementById(
-                              "edit_modal"
-                            ) as HTMLDialogElement
-                          ).showModal();
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-xs text-red-500 btn-outline rounded-none"
-                        onClick={() => handleDeleteMailing(mailing.id)}
-                      >
-                        Delete
-                      </button>
+                    <button
+                      className="btn btn-xs text-neutral btn-outline rounded-none"
+                      onClick={() => {
+                        setSelectedMailing(mailing);
+                        (
+                          document.getElementById(
+                            "edit_modal"
+                          ) as HTMLDialogElement
+                        ).showModal();
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-xs text-red-500 btn-outline rounded-none"
+                      onClick={() => handleDeleteMailing(mailing.id)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -253,7 +278,9 @@ const SearchMailings: React.FC = () => {
           />
         </>
       ) : (
-        <p className="text-center mt-4 ">No results found</p>
+        <p className="px-3 py-2 rounded-md mx-auto text-xs font-bold w-max mt-20 text-gray-700 bg-white transition-colors">
+          No results found
+        </p>
       )}
 
       {/* Edit Modal */}
@@ -307,6 +334,18 @@ const SearchMailings: React.FC = () => {
                   setSelectedMailing({
                     ...selectedMailing,
                     amo: e.target.value,
+                  })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Designation"
+                className="input input-sm capitalize input-bordered w-full"
+                value={selectedMailing.designation}
+                onChange={(e) =>
+                  setSelectedMailing({
+                    ...selectedMailing,
+                    designation: e.target.value,
                   })
                 }
               />

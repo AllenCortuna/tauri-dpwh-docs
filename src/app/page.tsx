@@ -24,6 +24,12 @@ export default function Home() {
       href: "/dashboard",
     },
     {
+      icon: <FaUsers className="w-6 h-6" />,
+      title: "Contractors",
+      subtitle: "Manage contractor records",
+      href: "/contractors",
+    },
+    {
       icon: <FaStamp className="w-6 h-6" />,
       title: "PIO Certification",
       subtitle: "Generate certification documents",
@@ -76,12 +82,6 @@ export default function Home() {
       title: "Bid Receipt",
       subtitle: "Create bid receipts",
       href: "/create-bid-receipt",
-    },
-    {
-      icon: <FaUsers className="w-6 h-6" />,
-      title: "Contractors",
-      subtitle: "Manage contractor records",
-      href: "/contractors",
     },
     {
       icon: <FaDatabase className="w-6 h-6" />,
