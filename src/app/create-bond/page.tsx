@@ -176,8 +176,8 @@ const CreateBonds = () => {
 
   // In the JSX, modify the contractor input field:
   return (
-    <div className="flex w-screen p-20 justify-center">
-      <form className="justify-center flex flex-col gap-8 mt-10 w-auto rounded-xl shadow-sm p-10 min-w-[65rem] bg-zinc-50">
+    <div className="flex w-screen p-10 justify-center">
+      <form className="justify-center flex flex-col gap-8 w-auto rounded-xl shadow-sm p-10 min-w-[65rem] bg-zinc-50">
         {/* AWARD */}
         <span className="grid grid-cols-4 gap-8">
           <label className="flex flex-col relative">

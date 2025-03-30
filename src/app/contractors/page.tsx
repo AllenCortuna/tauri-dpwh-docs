@@ -162,7 +162,7 @@ const ContractorsDashboard: React.FC = () => {
     color: string; 
     icon: React.ElementType 
   }) => (
-    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-${color}-600`}>
+    <div className={`bg-white rounded-lg p-6 border-l-4 border-${color}-600`}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-gray-500 text-xs mb-2">{title}</h2>

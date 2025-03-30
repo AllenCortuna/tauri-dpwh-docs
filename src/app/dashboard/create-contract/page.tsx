@@ -45,7 +45,7 @@ const CreateContracts: React.FC = () => {
       try {
         // Connect to SQLite instead of MySQL
         const db = await Database.load("sqlite:tauri.db");
-        
+
         // Create the contracts table if it doesn't exist
         await db.execute(`
           CREATE TABLE IF NOT EXISTS contracts (
@@ -126,12 +126,26 @@ const CreateContracts: React.FC = () => {
       errorToast("Please fill in all contract fields.");
       return;
     }
+    //validate year
+    if (data.year.length !== 4 || !/^\d+$/.test(data.year)) {
+      errorToast("Invalid year. Please enter a 4-digit year.");
+      return;
+    }
 
     setIsLoading(true);
     try {
       const db = await Database.load("sqlite:tauri.db");
-  
+
       for (const contract of contracts) {
+        // Check if the contract already exists
+        const existingContract = await db.select<Contract[]>(
+          "SELECT * FROM contracts WHERE contractID = ?",
+          [contract.contractID]
+        );
+        if (existingContract.length > 0) {
+          errorToast(`Contract with ID ${contract.contractID} already exists.`);
+          return;
+        }
         await db.execute(
           `INSERT INTO contracts (
             batch, year, posting, preBid, bidding, contractID, projectName, status,
@@ -187,7 +201,7 @@ const CreateContracts: React.FC = () => {
   return (
     <div className="flex flex-col w-screen p-10 justify-center">
       <form
-        className="flex flex-col gap-8 min-w-[60rem] mx-auto mt-20"
+        className="flex flex-col gap-8 min-w-[60rem] mx-auto p-8 bg-white"
         onSubmit={handleSubmit}
       >
         <div className="flex gap-10">
@@ -239,7 +253,7 @@ const CreateContracts: React.FC = () => {
               onChange={handleData}
               className="custom-input w-52"
               type="text"
-              placeholder="YYYY"
+              placeholder=""
             />
           </span>
         </div>
