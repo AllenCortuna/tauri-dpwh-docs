@@ -6,12 +6,18 @@ import "react-toastify/dist/ReactToastify.css";
 import { FaUsers, FaUserTie, FaBuilding } from "react-icons/fa";
 import { BsPersonVcard } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
-// Update imports at the top
 import ContractorNav from "../components/ContractorNav";
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  ChartOptions, 
+} from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
 
-// Remove these imports as they're no longer needed here
-// import Link from "next/link";
-// import { FaPlus, FaSearch, FaHome } from "react-icons/fa";
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface ContractorStats {
   totalContractors: number;
@@ -32,6 +38,17 @@ interface Contractor {
   lastUpdated: string;
 }
 
+// Define chart data type
+interface ChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    backgroundColor: string[];
+    borderColor: string[];
+    borderWidth: number;
+  }[];
+}
+
 const ContractorsDashboard: React.FC = () => {
   const [stats, setStats] = useState<ContractorStats>({
     totalContractors: 0,
@@ -43,61 +60,133 @@ const ContractorsDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recentContractors, setRecentContractors] = useState<Contractor[]>([]);
 
+  // Fetch contractor statistics
   useEffect(() => {
-    const fetchContractorStats = async () => {
-      try {
-        setIsLoading(true);
-        const db = await Database.load("sqlite:tauri.db");
-
-        // Get total contractors
-        const totalContractorsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors"
-        );
-
-        // Get contractors with email
-        const withEmailResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors WHERE email IS NOT NULL AND email != ''"
-        );
-
-        // Get contractors with TIN
-        const withTINResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors WHERE tin IS NOT NULL AND tin != ''"
-        );
-
-        // Get contractors with AMO
-        const withAMOResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors WHERE amo IS NOT NULL AND amo != ''"
-        );
-
-        // Get contractors with Designation
-        const withDesignationResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors WHERE designation IS NOT NULL AND designation != ''"
-        );
-
-        // Get recent contractors
-        const recentContractorsResult = await db.select<Contractor[]>(
-          "SELECT * FROM contractors ORDER BY lastUpdated DESC LIMIT 5"
-        );
-
-        setStats({
-          totalContractors: totalContractorsResult[0]?.count || 0,
-          totalWithEmail: withEmailResult[0]?.count || 0,
-          totalWithTIN: withTINResult[0]?.count || 0,
-          totalWithAMO: withAMOResult[0]?.count || 0,
-          totalWithDesignation: withDesignationResult[0]?.count || 0,
-        });
-
-        setRecentContractors(recentContractorsResult);
-      } catch (error) {
-        console.error("Error fetching contractor stats:", error);
-        toast.error("Failed to fetch contractor statistics");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchContractorStats();
   }, []);
+
+  const fetchContractorStats = async () => {
+    try {
+      setIsLoading(true);
+      const db = await Database.load("sqlite:tauri.db");
+
+      // Get all stats in a single query for better performance
+      const statsQueries = [
+        "SELECT COUNT(*) as count FROM contractors",
+        "SELECT COUNT(*) as count FROM contractors WHERE email IS NOT NULL AND email != ''",
+        "SELECT COUNT(*) as count FROM contractors WHERE tin IS NOT NULL AND tin != ''",
+        "SELECT COUNT(*) as count FROM contractors WHERE amo IS NOT NULL AND amo != ''",
+        "SELECT COUNT(*) as count FROM contractors WHERE designation IS NOT NULL AND designation != ''"
+      ];
+      
+      // Execute all queries in parallel
+      const [
+        totalContractorsResult,
+        withEmailResult,
+        withTINResult,
+        withAMOResult,
+        withDesignationResult
+      ] = await Promise.all(
+        statsQueries.map(query => db.select<[{ count: number }]>(query))
+      );
+
+      // Get recent contractors
+      const recentContractorsResult = await db.select<Contractor[]>(
+        "SELECT * FROM contractors ORDER BY lastUpdated DESC LIMIT 5"
+      );
+
+      setStats({
+        totalContractors: totalContractorsResult[0]?.count || 0,
+        totalWithEmail: withEmailResult[0]?.count || 0,
+        totalWithTIN: withTINResult[0]?.count || 0,
+        totalWithAMO: withAMOResult[0]?.count || 0,
+        totalWithDesignation: withDesignationResult[0]?.count || 0,
+      });
+
+      setRecentContractors(recentContractorsResult);
+    } catch (error) {
+      console.error("Error fetching contractor stats:", error);
+      toast.error("Failed to fetch contractor statistics");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Chart data preparation function
+  const prepareChartData = (withValue: number, total: number): ChartData => {
+    const withoutValue = total - withValue;
+    return {
+      labels: ['With', 'Without'],
+      datasets: [
+        {
+          data: [withValue, withoutValue],
+          backgroundColor: ['#10b981', '#f3f4f6'],
+          borderColor: ['#10b981', '#e5e7eb'],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // Chart options with proper typing
+  const chartOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%',
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        enabled: false,
+      },
+    },
+  };
+
+  // Calculate percentage helper
+  const calculatePercentage = (value: number, total: number): number => {
+    return total > 0 ? Math.round((value / total) * 100) : 0;
+  };
+
+  // Stat card component to reduce repetition
+  const StatCard = ({ 
+    title, 
+    value, 
+    total, 
+    color, 
+    icon: Icon 
+  }: { 
+    title: string; 
+    value: number; 
+    total: number; 
+    color: string; 
+    icon: React.ElementType 
+  }) => (
+    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 border-${color}-600`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-gray-500 text-xs mb-2">{title}</h2>
+          <div className="flex items-center gap-4">
+            <p className="text-2xl font-bold text-gray-700">{value}</p>
+            {title !== "Total Contractors" && (
+              <>
+                <div className="h-10 w-10">
+                  <Doughnut 
+                    data={prepareChartData(value, total)} 
+                    options={chartOptions} 
+                  />
+                </div>
+                <p className="text-sm text-gray-500">
+                  {calculatePercentage(value, total)}%
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+        <Icon className={`text-4xl text-${color}-600 opacity-70`} />
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -115,74 +204,41 @@ const ContractorsDashboard: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {/* Total Contractors Card */}
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-gray-500 text-xs mb-2">
-                    Total Contractors
-                  </h2>
-                  <p className="text-2xl font-bold text-gray-700">
-                    {stats.totalContractors}
-                  </p>
-                </div>
-                <FaUsers className="text-4xl text-indigo-600 opacity-70" />
-              </div>
-            </div>
-
-            {/* Contractors with Email */}
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-emerald-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-gray-500 text-xs mb-2">With Email</h2>
-                  <p className="text-2xl font-bold text-gray-700">
-                    {stats.totalWithEmail}
-                  </p>
-                </div>
-                <MdEmail className="text-4xl text-emerald-600 opacity-70" />
-              </div>
-            </div>
-
-            {/* Contractors with TIN */}
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-gray-500 text-xs mb-2">With TIN</h2>
-                  <p className="text-2xl font-bold text-gray-700">
-                    {stats.totalWithTIN}
-                  </p>
-                </div>
-                <BsPersonVcard className="text-4xl text-amber-600 opacity-70" />
-              </div>
-            </div>
-
-            {/* Contractors with AMO */}
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-fuchsia-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-gray-500 text-xs mb-2">With AMO</h2>
-                  <p className="text-2xl font-bold text-gray-700">
-                    {stats.totalWithAMO}
-                  </p>
-                </div>
-                <FaUserTie className="text-4xl text-fuchsia-600 opacity-70" />
-              </div>
-            </div>
-
-            {/* Contractors with Designation */}
-            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-rose-600">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-gray-500 text-xs mb-2">
-                    With Designation
-                  </h2>
-                  <p className="text-2xl font-bold text-gray-700">
-                    {stats.totalWithDesignation}
-                  </p>
-                </div>
-                <FaBuilding className="text-4xl text-rose-600 opacity-70" />
-              </div>
-            </div>
+            <StatCard 
+              title="Total Contractors" 
+              value={stats.totalContractors} 
+              total={stats.totalContractors} 
+              color="indigo" 
+              icon={FaUsers} 
+            />
+            <StatCard 
+              title="With Email" 
+              value={stats.totalWithEmail} 
+              total={stats.totalContractors} 
+              color="emerald" 
+              icon={MdEmail} 
+            />
+            <StatCard 
+              title="With TIN" 
+              value={stats.totalWithTIN} 
+              total={stats.totalContractors} 
+              color="amber" 
+              icon={BsPersonVcard} 
+            />
+            <StatCard 
+              title="With AMO" 
+              value={stats.totalWithAMO} 
+              total={stats.totalContractors} 
+              color="fuchsia" 
+              icon={FaUserTie} 
+            />
+            <StatCard 
+              title="With Designation" 
+              value={stats.totalWithDesignation} 
+              total={stats.totalContractors} 
+              color="rose" 
+              icon={FaBuilding} 
+            />
           </div>
 
           {/* Recent Contractors Section */}
