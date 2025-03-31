@@ -138,7 +138,7 @@ const Dashboard: React.FC = () => {
             id="year"
             value={currentYear}
             onChange={handleYearChange}
-            className="custom-input w-32"
+            className="select select-sm text-xs text-zinc-700 input-bordered bg-white focus:outline-primary focus:border-zinc-100 w-24"
           >
             {yearOptions.map((year) => (
               <option key={year} value={year.toString()}>
