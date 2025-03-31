@@ -1,5 +1,8 @@
 // EditModal.tsx
-import React from "react";
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import Database from "@tauri-apps/plugin-sql";
+
 interface Contract {
   id: number;
   batch: string;
@@ -32,6 +35,16 @@ interface EditModalProps {
   onSave: () => void;
 }
 
+interface Contractor {
+  id: number;
+  contractorName: string;
+  email: string;
+  amo: string;
+  designation: string;
+  tin: string;
+  address: string;
+}
+
 const EditModal: React.FC<EditModalProps> = ({
   isOpen,
   onClose,
@@ -39,7 +52,73 @@ const EditModal: React.FC<EditModalProps> = ({
   onFormChange,
   onSave,
 }) => {
+  const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [filteredContractors, setFilteredContractors] = useState<Contractor[]>([]);
+  const [showContractorDropdown, setShowContractorDropdown] = useState(false);
+  const contractorDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch contractors from database on component mount
+  useEffect(() => {
+    const fetchContractors = async () => {
+      try {
+        const db = await Database.load("sqlite:tauri.db");
+        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
+        setContractors(contractorsResult);
+      } catch (error) {
+        console.error("Error fetching contractors:", error);
+      }
+    };
+
+    fetchContractors();
+  }, []);
+
+  // Handle click outside contractor dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contractorDropdownRef.current && !contractorDropdownRef.current.contains(event.target as Node)) {
+        setShowContractorDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (!isOpen || !editFormData) return null;
+
+  // Modify onFormChange to handle contractor filtering
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onFormChange(e);
+
+    if (name === "contractor") {
+      if (value.trim() === "") {
+        setFilteredContractors([]);
+        setShowContractorDropdown(false);
+      } else {
+        const regex = new RegExp(value, "i");
+        const filtered = contractors.filter((c) =>
+          regex.test(c.contractorName)
+        );
+        setFilteredContractors(filtered);
+        setShowContractorDropdown(true);
+      }
+    }
+  };
+
+  const handleContractorSelect = (contractor: Contractor) => {
+    // Update the contractor field
+    onFormChange({
+      target: {
+        name: "contractor",
+        value: contractor.contractorName,
+      },
+    } as React.ChangeEvent<HTMLInputElement>);
+
+    setShowContractorDropdown(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
@@ -243,32 +322,56 @@ const EditModal: React.FC<EditModalProps> = ({
             </div>
 
             <div className="block">
-              <span className="font-medium text-gray-700">Contractor</span>
-              <input
-                type="text"
-                name="contractor"
-                value={editFormData.contractor || ""}
-                onChange={onFormChange}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
-              />
+              <div className="block relative">
+                <span className="font-medium text-gray-700">Contractor</span>
+                <input
+                  type="text"
+                  name="contractor"
+                  value={editFormData.contractor || ""}
+                  autoComplete="off"
+                  onChange={handleFormChange}
+                  className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                />
+                {showContractorDropdown && filteredContractors.length > 0 && (
+                  <div
+                    ref={contractorDropdownRef}
+                    className="absolute z-0 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    {filteredContractors.map((contractor) => (
+                      <div
+                        key={contractor.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        onClick={() => handleContractorSelect(contractor)}
+                      >
+                        <div className="font-medium">
+                          {contractor.contractorName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {contractor.address}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Modal Buttons */}
-        <div className="flex justify-end gap-4 mt-6">
-          <button
-            onClick={onClose}
-            className="btn-outline text-gray-700 rounded-none shadow-md btn btn-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onSave}
-            className="btn btn-neutral rounded-none shadow-md text-white btn-sm"
-          >
-            Save Changes
-          </button>
+          {/* Modal Buttons */}
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              onClick={onClose}
+              className="btn-outline text-gray-700 rounded-none shadow-md btn btn-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSave}
+              className="btn btn-neutral rounded-none shadow-md text-white btn-sm"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>
