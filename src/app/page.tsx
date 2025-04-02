@@ -4,7 +4,6 @@ import {
   FaStamp, 
   FaExclamationCircle, 
   FaFileExcel, 
-  FaFileSignature, 
   FaEdit,
   FaShieldAlt,
   FaReceipt,
@@ -12,6 +11,7 @@ import {
   FaDatabase,
   FaLayerGroup,
   FaFile,
+  FaCheckSquare,
 } from 'react-icons/fa'; // Import icons
 import { MdSpaceDashboard } from "react-icons/md";
 
@@ -54,10 +54,10 @@ export default function Home() {
       href: "/upload-xlsx",
     },
     {
-      icon: <FaFileSignature className="w-6 h-6" />,
-      title: "Contract",
+      icon: <FaCheckSquare className="w-6 h-6" />,
+      title: "Checklist",
       subtitle: "Create Infrastructure contracts",
-      href: "/dashboard/create-contract",
+      href: "/checklist",
     },
     {
       icon: <FaLayerGroup className="w-6 h-6" />,
