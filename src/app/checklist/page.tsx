@@ -11,6 +11,7 @@ interface Contract {
   id: number;
   contractID: string;
   projectName: string;
+  status: string;
   year: string;
   hasMatchingFile?: boolean;
 }
@@ -23,6 +24,7 @@ const Checklist: React.FC = () => {
   const [currentYear, setCurrentYear] = useState<string>(
     new Date().getFullYear().toString()
   );
+  const [filterCheck, setFilterCheck] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
@@ -73,7 +75,7 @@ const Checklist: React.FC = () => {
         const db = await Database.load("sqlite:tauri.db");
 
         const contractsList = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, year FROM contracts WHERE year = ? ORDER BY contractID",
+          "SELECT id, contractID, projectName, status, year FROM contracts WHERE year = ? ORDER BY contractID",
           [currentYear]
         );
 
@@ -92,17 +94,21 @@ const Checklist: React.FC = () => {
     };
 
     fetchContracts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear]);
 
   const applyFilters = (contractsToFilter: Contract[]) => {
     let result = [...contractsToFilter];
 
     // Apply filter by status
-    if (filterStatus === "present") {
+    if (filterCheck === "present") {
       result = result.filter((contract) => contract.hasMatchingFile);
-    } else if (filterStatus === "missing") {
+    } else if (filterCheck === "missing") {
       result = result.filter((contract) => !contract.hasMatchingFile);
+    }
+    // Apply filter by status
+    if (filterStatus !== "all") {
+      result = result.filter((contract) => contract.status === filterStatus);
     }
 
     // Apply sorting
@@ -116,12 +122,15 @@ const Checklist: React.FC = () => {
 
   useEffect(() => {
     applyFilters(contracts);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus, sortDirection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterCheck, filterStatus, sortDirection]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterStatus(e.target.value);
+    setFilterCheck(e.target.value);
   };
+  const handleFilterStatus = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterStatus(e.target.value); 
+  }
 
   const toggleSortDirection = () => {
     setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -168,13 +177,21 @@ const Checklist: React.FC = () => {
 
       {!isLoading && (
         <div className="flex justify-end items-center gap-4 mb-4">
+          <button
+            onClick={toggleSortDirection}
+            className="flex items-center px-3 py-2 rounded-md text-xs text-gray-600 hover:text-gray-900 bg-white hover:bg-primary hover:btn-outline transition-colors border tooltip-bottom tooltip"
+            data-tip="Sort by contract ID"
+          >
+            Sort {sortDirection === "asc" ? "↑" : "↓"}
+          </button>
+
           <div className="flex items-center">
             <label htmlFor="filter" className="mr-2 text-xs text-gray-700">
               Filter:
             </label>
             <select
-              id="filter"
-              value={filterStatus}
+              id="filterCheck"
+              value={filterCheck}
               onChange={handleFilterChange}
               className="select select-sm text-xs text-zinc-700 input-bordered bg-white focus:outline-primary focus:border-zinc-100 w-32"
             >
@@ -183,12 +200,24 @@ const Checklist: React.FC = () => {
               <option value="missing">Missing</option>
             </select>
           </div>
-          <button
-            onClick={toggleSortDirection}
-            className="flex items-center px-3 py-2 rounded-md text-xs text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-primary hover:btn-outline transition-colors"
-          >
-            Sort {sortDirection === "asc" ? "↑" : "↓"}
-          </button>
+
+          <div className="flex items-center">
+            <label htmlFor="filter" className="mr-2 text-xs text-gray-700">
+              Status:
+            </label>
+            <select
+              id="filterStatus"
+              value={filterStatus}
+              onChange={handleFilterStatus}
+              className="select select-sm text-xs text-zinc-700 input-bordered bg-white focus:outline-primary focus:border-zinc-100 w-32"
+            >
+              <option value="all">All</option>
+              <option value="posted">Posted</option>
+              <option value="award">Award</option>
+              <option value="proceed">Proceed</option>
+            </select>
+          </div>
+
           {selectedPath && (
             <div className="px-3 py-2 rounded-md text-xs text-white bg-neutral btn-outline transition-colors w-max mb-4 ml-auto mr-4">
               {selectedPath.split("\\").pop()}
@@ -222,7 +251,7 @@ const Checklist: React.FC = () => {
                 {filteredContracts.length > 0 ? (
                   filteredContracts.map((contract) => (
                     <tr key={contract.id}>
-                      <td className="px-6 py-4 text-primary font-bold">
+                      <td className="px-6 py-4 text-primary font-bold tooltip-right tooltip" data-tip={contract.status}>
                         {contract.contractID}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
