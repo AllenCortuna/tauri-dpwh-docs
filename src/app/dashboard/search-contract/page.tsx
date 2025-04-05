@@ -37,6 +37,7 @@ const AdvancedSearch: React.FC = () => {
     new Date().getFullYear().toString()
   );
   const [contractor, setContractor] = useState<string>("");
+  const [batch, setBatch] = useState<string>("");
   const [biddingDateStart, setBiddingDateStart] = useState<string>("");
   const [biddingDateEnd, setBiddingDateEnd] = useState<string>("");
   const [awardDateStart, setAwardDateStart] = useState<string>("");
@@ -64,14 +65,19 @@ const AdvancedSearch: React.FC = () => {
         params.push(`%${contractor}%`);
       }
 
+      if (batch) {
+        query += ` AND batch = ?`;
+        params.push(batch);
+      }
+
       if (searchProjectName) {
-        query += ` AND projectName REGEXP ?`;
-        params.push(searchProjectName);
+        query += ` AND projectName LIKE ?`;
+        params.push(`%${searchProjectName}%`);
       }
 
       if (searchContractID) {
-        query += ` AND contractID REGEXP ?`;
-        params.push(searchContractID);
+        query += ` AND contractID LIKE ?`;
+        params.push(`%${searchContractID}%`);
       }
 
       if (biddingDateStart && biddingDateEnd) {
@@ -92,11 +98,12 @@ const AdvancedSearch: React.FC = () => {
       console.error(error);
     }
   };
-  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
+  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(false);
 
   // Update handleReset
   const handleReset = () => {
     setContractor("");
+    setBatch("");
     setBiddingDateStart("");
     setBiddingDateEnd("");
     setAwardDateStart("");
@@ -122,7 +129,7 @@ const AdvancedSearch: React.FC = () => {
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-          className="px-3 py-2 rounded-md text-xs font-bold w-max text-gray-700 bg-white transition-colors flex gap-2 shadow-sm"
+          className="px-3 py-2 rounded-md text-xs font-bold w-max text-gray-700 bg-white transition-colors flex gap-2 shadow-sm border"
         >
           {isFiltersVisible ? (
             <>
@@ -136,6 +143,22 @@ const AdvancedSearch: React.FC = () => {
             </>
           )}
         </button>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={handleReset}
+            className="btn btn-sm btn-outline rounded-none px-6"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleSearch}
+            className="btn btn-sm btn-neutral text-white rounded-none px-6"
+          >
+            Search
+          </button>
+        </div>
       </div>
 
       {/* Search Filters */}
@@ -146,14 +169,12 @@ const AdvancedSearch: React.FC = () => {
             : "opacity-0 max-h-0 overflow-hidden"
         }`}
       >
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <h2 className="text-lg font-semibold mb-6">Search Filters</h2>
-
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-8  border">
           {/* Basic Filters */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-6 gap-6 mb-6">
             {/* Year Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
                 Year
               </label>
               <select
@@ -172,23 +193,21 @@ const AdvancedSearch: React.FC = () => {
               </select>
             </div>
 
-            {/* Project Name Search */}
+            {/* Batch Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Project Name
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
+                Batch
               </label>
               <input
                 type="text"
-                value={searchProjectName}
-                onChange={(e) => setSearchProjectName(e.target.value)}
+                value={batch}
+                onChange={(e) => setBatch(e.target.value)}
                 className="custom-input w-full"
-                placeholder="Enter project name or pattern..."
               />
             </div>
 
-            {/* Contract ID Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
                 Contract ID
               </label>
               <input
@@ -196,16 +215,43 @@ const AdvancedSearch: React.FC = () => {
                 value={searchContractID}
                 onChange={(e) => setSearchContractID(e.target.value)}
                 className="custom-input w-full"
-                placeholder="Enter contract ID or pattern..."
+                placeholder=""
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-5 gap-6 mb-6">
+            {/* Project Name Search */}
+            <div className="col-span-3">
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
+                Project Name
+              </label>
+              <input
+                type="text"
+                value={searchProjectName}
+                onChange={(e) => setSearchProjectName(e.target.value)}
+                className="custom-input w-full"
+              />
+            </div>
+            {/* Contractor Filter */}
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-2">
+                Contractor
+              </label>
+              <input
+                type="text"
+                value={contractor}
+                onChange={(e) => setContractor(e.target.value)}
+                className="custom-input w-full"
               />
             </div>
           </div>
 
           {/* Date Ranges */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="flex mt-10 flex-wrap gap-6 mb-6">
             {/* Bidding Date Range */}
-            <div className="border p-4 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="shadow p-4 rounded-lg">
+              <label className="block text-xs font-medium text-gray-700 mb-3">
                 Bidding Date Range
               </label>
               <div className="flex gap-4">
@@ -217,7 +263,7 @@ const AdvancedSearch: React.FC = () => {
                     type="date"
                     value={biddingDateStart}
                     onChange={(e) => setBiddingDateStart(e.target.value)}
-                    className="input input-bordered input-sm w-full"
+                    className="input input-bordered input-sm text-xs w-full"
                   />
                 </div>
                 <div className="flex-1">
@@ -226,15 +272,15 @@ const AdvancedSearch: React.FC = () => {
                     type="date"
                     value={biddingDateEnd}
                     onChange={(e) => setBiddingDateEnd(e.target.value)}
-                    className="input input-bordered input-sm w-full"
+                    className="input input-bordered input-sm text-xs w-full"
                   />
                 </div>
               </div>
             </div>
 
             {/* Award Date Range */}
-            <div className="border p-4 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="shadow p-4 rounded-lg">
+              <label className="block text-xs font-medium text-gray-700 mb-3">
                 Award Date Range
               </label>
               <div className="flex gap-4">
@@ -246,7 +292,7 @@ const AdvancedSearch: React.FC = () => {
                     type="date"
                     value={awardDateStart}
                     onChange={(e) => setAwardDateStart(e.target.value)}
-                    className="input input-bordered input-sm w-full"
+                    className="input input-bordered input-sm text-xs w-full"
                   />
                 </div>
                 <div className="flex-1">
@@ -255,97 +301,78 @@ const AdvancedSearch: React.FC = () => {
                     type="date"
                     value={awardDateEnd}
                     onChange={(e) => setAwardDateEnd(e.target.value)}
-                    className="input input-bordered input-sm w-full"
+                    className="input input-bordered input-sm text-xs w-full"
                   />
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Contractor Filter */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contractor
-            </label>
-            <input
-              type="text"
-              value={contractor}
-              onChange={(e) => setContractor(e.target.value)}
-              className="custom-input w-1/2"
-              placeholder="Enter contractor name..."
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleReset}
-              className="btn btn-sm btn-outline rounded-none px-6"
-            >
-              Reset Filters
-            </button>
-            <button
-              onClick={handleSearch}
-              className="btn btn-sm btn-neutral rounded-none px-6"
-            >
-              Search
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Results Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
-        <table className="w-full">
-          <thead className="bg-gray-100">
-            <tr className="text-xs">
-              <th className="p-3 text-left">Contract ID</th>
-              <th className="p-3 text-left">Project Name</th>
-              <th className="p-3 text-left">Contractor</th>
-              <th className="p-3 text-left">Bidding Date</th>
-              <th className="p-3 text-left">Award Date</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-xs">
-            {currentContracts.map((contract) => (
-              <tr key={contract.id} className="border-t hover:bg-gray-50 text-zinc-600">
-                <td className="p-3">{contract.contractID}</td>
-                <td className="p-3">{contract.projectName}</td>
-                <td className="p-3">{contract.contractor}</td>
-                <td className="p-3">{contract.bidding}</td>
-                <td className="p-3">{contract.noa}</td>
-                <td className="p-3">{contract.status}</td>
-                <td className="p-3">
-                  <button
-                    onClick={() => handleView(contract)}
-                    className="btn btn-xs btn-outline rounded-none"
+      {currentContracts.length === 0 ? (
+        <div className="text-center p-4 py-2 border-gray-600 text-xs mx-auto font-semibold text-gray-700 border w-max">
+          No contracts found
+        </div>
+      ) : (
+        <div>
+          <div className="overflow-x-auto bg-white rounded-lg shadow border">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr className="text-xs">
+                  <th className="p-3 text-left">Contract ID</th>
+                  <th className="p-3 text-left">Project Name</th>
+                  <th className="p-3 text-left">Contractor</th>
+                  <th className="p-3 text-left">Bidding Date</th>
+                  <th className="p-3 text-left">Award Date</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs">
+                {currentContracts.map((contract) => (
+                  <tr
+                    key={contract.id}
+                    className="border-t hover:bg-gray-50 text-zinc-600"
                   >
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    <td className="p-3">{contract.contractID}</td>
+                    <td className="p-3">{contract.projectName}</td>
+                    <td className="p-3">{contract.contractor}</td>
+                    <td className="p-3">{contract.bidding}</td>
+                    <td className="p-3">{contract.noa}</td>
+                    <td className="p-3">{contract.status}</td>
+                    <td className="p-3">
+                      <button
+                        onClick={() => handleView(contract)}
+                        className="btn btn-xs btn-outline rounded-none"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      {/* Pagination */}
-      <ReactPaginate
-        previousLabel={"Previous"}
-        nextLabel={"Next"}
-        breakLabel={"..."}
-        pageCount={pageCount}
-        marginPagesDisplayed={2}
-        pageRangeDisplayed={5}
-        onPageChange={({ selected }) => setCurrentPage(selected)}
-        containerClassName={"flex justify-center space-x-2 mt-4"}
-        pageClassName={"btn btn-xs"}
-        activeClassName={"btn-active"}
-        previousClassName={"btn btn-xs"}
-        nextClassName={"btn btn-xs"}
-      />
+          {/* Pagination */}
+          <ReactPaginate
+            previousLabel={"Previous"}
+            nextLabel={"Next"}
+            breakLabel={"..."}
+            pageCount={pageCount}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={5}
+            onPageChange={({ selected }) => setCurrentPage(selected)}
+            containerClassName={"flex justify-center space-x-2 mt-4"}
+            pageClassName={"btn btn-xs"}
+            activeClassName={"btn-active"}
+            previousClassName={"btn btn-xs"}
+            nextClassName={"btn btn-xs"}
+          />
+        </div>
+      )}
 
       {/* View Modal */}
       <ViewModal
