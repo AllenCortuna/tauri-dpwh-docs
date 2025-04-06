@@ -4,26 +4,24 @@ import { useRouter } from 'next/navigation';
 import { ToastContainer } from "react-toastify";
 import { FaLock, FaUser } from 'react-icons/fa';
 import Image from 'next/image';
-import { useLogin } from '../../../config/useLogin';
+import { useLogin } from "../../../config/useLogin";
+import { useAuthStore } from "../../../config/authStore";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
   });
-  const {isAuthenticated, login, isLoading} = useLogin();
+  const { login, isLoading } = useLogin();
+  const { isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = () => {
-      if (isAuthenticated) {
-        router.push('/dashboard');
-      }
-    };
-    
-    checkAuth();
-  }, [router, isAuthenticated]);
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,7 +33,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(credentials);
+    await login(credentials);
   };
 
   return (
@@ -62,6 +60,7 @@ const Login = () => {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Form content remains the same */}
           <div className="rounded-md shadow-sm -space-y-px">
             <div className="relative mb-4">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -72,7 +71,7 @@ const Login = () => {
                 name="username"
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-700 rounded-t-md focus:outline-none focus:ring-primary focus:ring-2  focus:border-primary focus:z-10 text-xs"
+                className="appearance-none rounded-none relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 text-xs focus:ring-2 text-gray-600"
                 placeholder="Username"
                 value={credentials.username}
                 onChange={handleChange}
@@ -87,7 +86,7 @@ const Login = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-700 rounded-b-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary focus:z-10 text-xs"
+                className="appearance-none rounded-none relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 text-xs focus:ring-2 text-gray-600"
                 placeholder="Password"
                 value={credentials.password}
                 onChange={handleChange}

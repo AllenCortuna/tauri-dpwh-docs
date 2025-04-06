@@ -1,19 +1,15 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import dpwhLogo from "../../../public/dpwhLogo.png";
+import { useAuthStore } from "../../../config/authStore";
 import { useLogin } from "../../../config/useLogin";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, logout, isLoading } = useLogin();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      alert("You are already logged in!");
-    }
-  }, [isAuthenticated, isLoading])
+  const { isAuthenticated } = useAuthStore(); // Get auth state directly from store
+  const { logout } = useLogin();
 
   return (
     <nav className="border-b-2 border-gray-300 shadow-sm">
@@ -99,6 +95,27 @@ export const Navbar = () => {
             >
               Home
             </Link>
+            
+            {/* Add login/logout to mobile menu */}
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

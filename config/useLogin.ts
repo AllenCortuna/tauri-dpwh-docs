@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { successToast, errorToast } from './toast';
+import { useAuthStore } from './authStore';
 
 interface LoginCredentials {
   username: string;
@@ -9,14 +10,8 @@ interface LoginCredentials {
 
 export const useLogin = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const { isAuthenticated, login: storeLogin, logout: storeLogout, user } = useAuthStore();
   const router = useRouter();
-
-  // Check authentication status on mount
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-  }, []);
 
   // Login function
   const login = async (credentials: LoginCredentials) => {
@@ -24,15 +19,14 @@ export const useLogin = () => {
     try {
       // For demonstration, using a hardcoded password
       if (credentials.username === 'admin' && credentials.password === 'AllenCortuna') {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('user', credentials.username);
+        // Update Zustand store
+        storeLogin(credentials.username);
         
-        setIsAuthenticated(true);
         successToast("Login successful!");
         
         // Redirect to home page
         setTimeout(() => {
-          router.push('/');
+          router.push('/dashboard');
         }, 1000);
         
         return true;
@@ -51,16 +45,14 @@ export const useLogin = () => {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
+    storeLogout();
     successToast("Logged out successfully");
     router.push('/login');
   };
 
   // Get current user
   const getUser = (): string | null => {
-    return localStorage.getItem('user');
+    return user;
   };
 
   return {
