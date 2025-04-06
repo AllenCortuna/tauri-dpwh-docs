@@ -127,20 +127,34 @@ const AdvancedSearch: React.FC = () => {
     <div className="p-10 bg-gray-50 min-h-screen w-full">
       {/* Toggle Button */}
       <div className="flex justify-between items-center mb-4">
+        <div>
+            {/* Year Filter */}
+            <div>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="select select-bordered select-sm w-full bg-white"
+              >
+                {Array.from({ length: 10 }, (_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+        </div>
         <button
           onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-          className="px-3 py-2 rounded-md text-xs font-bold w-max text-gray-700 bg-white transition-colors flex gap-2 shadow-sm border"
+          className="px-3 py-2 rounded-md text-xs font-bold w-max text-gray-700 bg-white transition-colors flex gap-2 shadow-sm border ml-5 mr-auto"
         >
+          <span>Advance</span>
           {isFiltersVisible ? (
-            <>
-              <span>Hide Filters</span>
-              <FaChevronUp className="h-4 w-4" />
-            </>
+            <FaChevronUp className="h-4 w-4" />
           ) : (
-            <>
-              <span>Show Filters</span>
-              <FaChevronDown className="h-4 w-4" />
-            </>
+            <FaChevronDown className="h-4 w-4" />
           )}
         </button>
 
@@ -172,27 +186,6 @@ const AdvancedSearch: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm mb-8  border">
           {/* Basic Filters */}
           <div className="grid grid-cols-6 gap-6 mb-6">
-            {/* Year Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-2">
-                Year
-              </label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="select select-bordered select-sm w-full bg-white"
-              >
-                {Array.from({ length: 10 }, (_, i) => {
-                  const year = new Date().getFullYear() - i;
-                  return (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
             {/* Batch Filter */}
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">
@@ -347,7 +340,7 @@ const AdvancedSearch: React.FC = () => {
                         onClick={() => handleView(contract)}
                         className="btn btn-xs btn-outline rounded-none"
                       >
-                        View
+                        details
                       </button>
                     </td>
                   </tr>

@@ -1,38 +1,61 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
-import dpwhLogo from '../../../public/dpwhLogo.png'
+import React, { useEffect, useState } from "react";
+import dpwhLogo from "../../../public/dpwhLogo.png";
+import { useLogin } from "../../../config/useLogin";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, logout, isLoading } = useLogin();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      alert("You are already logged in!");
+    }
+  }, [isAuthenticated, isLoading])
 
   return (
     <nav className="border-b-2 border-gray-300 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between gap-6 h-16">
           {/* Logo and Brand Name */}
           <Link href="/" className="flex items-center gap-3">
-            <Image 
-              src={dpwhLogo} 
-              alt="DPWH Logo" 
-              width={30} 
+            <Image
+              src={dpwhLogo}
+              alt="DPWH Logo"
+              width={30}
               height={30}
               className="object-contain"
             />
-            <span className="font-bold text-gray-800 tracking-wide">
-              MODEO
-            </span>
+            <span className="font-bold text-gray-800 tracking-wide">MODEO</span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              href="/" 
+          <div className="hidden md:flex items-center space-x-4 ml-auto">
+            <Link
+              href="/"
               className="px-3 py-2 rounded-md text-xs font-bold text-gray-700 hover:text-gray-900 bg-gray-50 hover:bg-primary hover:btn-outline transition-colors"
             >
               Home
             </Link>
+          </div>
+          <div className="hidden md:flex items-center space-x-4">
+            {isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="px-3 py-2 rounded-md text-xs font-bold text-gray-700 hover:text-gray-900 bg-gray-50 hover:bg-primary hover:btn-outline transition-colors"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="px-3 py-2 rounded-md text-xs font-bold text-gray-700 hover:text-gray-900 bg-gray-50 hover:bg-primary hover:btn-outline transition-colors"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -53,7 +76,11 @@ export const Navbar = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+                  d={
+                    isMenuOpen
+                      ? "M6 18L18 6M6 6l12 12"
+                      : "M4 6h16M4 12h16M4 18h16"
+                  }
                 />
               </svg>
             </button>
@@ -71,13 +98,6 @@ export const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Home
-            </Link>
-            <Link
-              href="/documentation"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Documentation
             </Link>
           </div>
         </div>
