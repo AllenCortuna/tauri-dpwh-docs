@@ -239,6 +239,7 @@ const CreateBidReceipt = () => {
       const commonData = {
         ...data,
         date: formatDate(data.date),
+        representative: data.representative.toUpperCase()
       };
 
       // Generate Transmittal Document
