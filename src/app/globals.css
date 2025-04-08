@@ -7,10 +7,27 @@
   /* border: 1px solid red; */
 }
 /* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 2px; /* Width of the scrollbar */
-  /* height: 4px; */
+
+
+/* Firefox scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 14, 14, 0.2) transparent;
 }
+
+::-webkit-scrollbar {
+  width: 1px; /* Width of the scrollbar */
+}
+/* Edge and Safari scrollbar styles */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(36, 36, 36, 0.2);
+  border-radius: 4px;
+}
+
 /* Calendar input styles for cross-browser compatibility */
 ::-webkit-calendar-picker-indicator {
   opacity: 1;

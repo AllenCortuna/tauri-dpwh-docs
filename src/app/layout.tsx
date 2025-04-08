@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${font.className} flex flex-col w-screen h-screen`}>
+      <body className={`${font.className} flex flex-col w-screen h-screen scroll-smooth`}>
         <Navbar />
         <main className="flex flex-col justify-start items-center overflow-x-hidden overflow-y-scroll">
           {children}

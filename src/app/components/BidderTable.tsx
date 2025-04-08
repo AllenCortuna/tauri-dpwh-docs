@@ -171,7 +171,7 @@ const BidderTable: React.FC<BidderTableProps> = ({ inputArr, setInputArr }) => {
           placeholder="Address"
         />
         <input
-          type="text"
+          type="number"
           autoComplete="off"
           className="custom-input w-80"
           name="telNo"

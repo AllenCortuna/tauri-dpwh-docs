@@ -11,11 +11,11 @@ import { formatDate } from "../../../config/convertToDate";
 import Database from "@tauri-apps/plugin-sql";
 
 interface Bidder {
-    name: string;
-    address: string;
-    telNo: string;
-    philReg: string;
-  }
+  name: string;
+  address: string;
+  telNo: string;
+  philReg: string;
+}
 
 interface FormData {
   contractID: string;
@@ -23,7 +23,24 @@ interface FormData {
   budget: string;
   date: string;
   category: string;
+  bidders?: Bidder[];
 }
+interface DocumentData {
+  contractID: string;
+  contractName: string;
+  budget: string;
+  date: string;
+  category: string;
+  endUser?: string;
+  endID?: string;
+  endDesignation?: string;
+  bidders?: Bidder[];
+  name?: string;
+  address?: string;
+  telNo?: string;
+  philReg?: string;
+}
+
 
 interface Contract {
   id: number;
@@ -46,7 +63,7 @@ const Create3Strike = () => {
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const contractDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     const fetchContracts = async () => {
       try {
@@ -83,8 +100,8 @@ const Create3Strike = () => {
         setShowContractDropdown(false);
       } else {
         const regex = new RegExp(value, "i");
-        const filtered = contracts.filter(c => 
-          regex.test(c.contractID) || regex.test(c.projectName)
+        const filtered = contracts.filter(
+          (c) => regex.test(c.contractID) || regex.test(c.projectName)
         );
         setFilteredContracts(filtered);
         setShowContractDropdown(true);
@@ -100,24 +117,12 @@ const Create3Strike = () => {
     }));
   };
 
-  interface DocumentData {
-    contractID: string;
-    contractName: string;
-    budget: string;
-    date: string;
-    category: string;
-    endUser?: string;
-    endID?: string;
-    endDesignation?: string;
-    bidders?: Bidder[];
-    name?: string;
-    address?: string;
-    telNo?: string;
-    philReg?: string;
-  }
-  
-  const generateDocument = async (templateName: string, dataToAdd: DocumentData, fileName: string) => {
-  
+
+  const generateDocument = async (
+    templateName: string,
+    dataToAdd: DocumentData,
+    fileName: string
+  ) => {
     try {
       // Fetch the template file from the public folder
       const templatePath = `/3-STRIKE/${templateName}.docx`;
@@ -186,10 +191,24 @@ const Create3Strike = () => {
       };
 
       // Generate Strike Document
-      await generateDocument("strike", { ...commonData, bidders: inputArr }, `${data.contractID} STRIKE.docx`);
+      await generateDocument(
+        "strike",
+        {
+          ...commonData,
+          bidders: inputArr.map((item, index) => ({
+            ...item,
+            id: index + 1,
+          })),
+        },
+        `${data.contractID} STRIKE.docx`
+      );
 
       // Generate Transmittal Document
-      await generateDocument("transmittal", commonData, `${data.contractID} TRANSMITTAL.docx`);
+      await generateDocument(
+        "transmittal",
+        commonData,
+        `${data.contractID} TRANSMITTAL.docx`
+      );
 
       // Generate Individual Documents
       for (const bidder of inputArr) {
@@ -223,7 +242,7 @@ const Create3Strike = () => {
               autoComplete="off"
             />
             {showContractDropdown && filteredContracts.length > 0 && (
-              <div 
+              <div
                 ref={contractDropdownRef}
                 className="absolute z-10 w-[40rem] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
               >
@@ -232,16 +251,18 @@ const Create3Strike = () => {
                     key={contract.id}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                     onClick={() => {
-                      setData(prevData => ({
+                      setData((prevData) => ({
                         ...prevData,
                         contractID: contract.contractID,
-                        contractName: contract.projectName
+                        contractName: contract.projectName,
                       }));
                       setShowContractDropdown(false);
                     }}
                   >
                     <div className="font-medium">{contract.contractID}</div>
-                    <div className="text-xs text-gray-500 truncate">{contract.projectName}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {contract.projectName}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -288,7 +309,7 @@ const Create3Strike = () => {
       <button
         type="submit"
         className={`btn fixed bottom-10 left-1/2 transform -translate-x-1/2 ${
-          isLoading ? "btn-disable" : "btn-neutral"
+          isLoading ? "loading btn-disabled" : "btn-neutral"
         } text-xs w-80`}
         onClick={handleSubmit}
         disabled={isLoading}
