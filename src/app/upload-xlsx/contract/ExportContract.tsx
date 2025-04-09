@@ -4,29 +4,7 @@ import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
 import { errorToast } from "../../../../config/toast";
 import { FiDownload } from "react-icons/fi";
-
-interface Contract {
-  id: number;
-  batch: string;
-  year: string; // Added year field
-  posting: string;
-  preBid: string;
-  bidding: string;
-  contractID: string;
-  projectName: string;
-  status: string;
-  contractAmount?: string;
-  contractor?: string;
-  bidEvalStart?: string;
-  bidEvalEnd?: string;
-  postQualStart?: string;
-  postQualEnd?: string;
-  reso?: string;
-  noa?: string;
-  ntp?: string;
-  ntpRecieve?: string;
-  contractDate?: string;
-}
+import { Contract } from "../../../../config/interface";
 
 interface ExcelRow {
   "Batch No.": string;

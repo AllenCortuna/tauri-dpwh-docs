@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 import { errorToast, successToast } from "../../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
+import { createContractorsTable } from "../../../../config/query";
 
 interface Contractor {
   email?: string;
@@ -33,18 +34,7 @@ const UploadContractor: React.FC = () => {
       try {
         const db = await Database.load("sqlite:tauri.db");
 
-        await db.execute(`
-          CREATE TABLE IF NOT EXISTS contractors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT NOT NULL UNIQUE,
-            address TEXT NOT NULL,
-            amo TEXT,
-            designation TEXT,
-            tin TEXT,
-            contractorName TEXT NOT NULL,
-            lastUpdated TEXT NOT NULL
-          );
-        `);
+        await db.execute(createContractorsTable);
 
         console.log("Database and table initialized successfully.");
       } catch (error) {

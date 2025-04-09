@@ -5,6 +5,7 @@ import { errorToast, successToast } from "../../../config/toast";
 import Database from "@tauri-apps/plugin-sql";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { readFile, writeFile } from "@tauri-apps/plugin-fs";
+import { createContractTable, createContractorsTable } from "../../../config/query";
 
 const SQLiteManager: React.FC = () => {
   const [password, setPassword] = useState("");
@@ -40,43 +41,8 @@ const SQLiteManager: React.FC = () => {
       await db.execute("DROP TABLE IF EXISTS contracts");
 
       // Recreate tables
-      await db.execute(`
-        CREATE TABLE IF NOT EXISTS contracts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          batch TEXT NOT NULL,
-          year TEXT NOT NULL,
-          posting TEXT NOT NULL,
-          preBid TEXT NOT NULL,
-          bidding TEXT NOT NULL,
-          contractID TEXT NOT NULL UNIQUE,
-          projectName TEXT NOT NULL,
-          status TEXT NOT NULL,
-          contractAmount TEXT,
-          contractor TEXT,
-          bidEvalStart TEXT,
-          bidEvalEnd TEXT,
-          postQualStart TEXT,
-          postQualEnd TEXT,
-          reso TEXT,
-          noa TEXT,
-          ntp TEXT,
-          ntpRecieve TEXT,
-          contractDate TEXT,
-          lastUpdated TEXT NOT NULL
-        );
-      `);
-      await db.execute(`
-        CREATE TABLE contractors (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          contractorName TEXT NOT NULL,
-          address TEXT NOT NULL,
-          email TEXT,
-          amo TEXT,
-          designation TEXT,
-          tin TEXT,
-          lastUpdated TEXT NOT NULL
-        );
-      `);
+      await db.execute(createContractTable);
+      await db.execute(createContractorsTable);
 
       successToast("Database has been reset successfully!");
       setShowConfirmation(false);

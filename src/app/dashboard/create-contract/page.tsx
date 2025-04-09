@@ -3,6 +3,7 @@ import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import Database from "@tauri-apps/plugin-sql";
 import { errorToast, successToast } from "../../../../config/toast";
+import { createContractTable } from "../../../../config/query";
 
 interface Contract {
   contractID: string;
@@ -47,31 +48,7 @@ const CreateContracts: React.FC = () => {
         const db = await Database.load("sqlite:tauri.db");
 
         // Create the contracts table if it doesn't exist
-        await db.execute(`
-          CREATE TABLE IF NOT EXISTS contracts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            batch TEXT NOT NULL,
-            year TEXT NOT NULL,
-            posting TEXT NOT NULL,
-            preBid TEXT NOT NULL,
-            bidding TEXT NOT NULL,
-            contractID TEXT NOT NULL UNIQUE,
-            projectName TEXT NOT NULL,
-            status TEXT NOT NULL,
-            contractAmount TEXT,
-            contractor TEXT,
-            bidEvalStart TEXT,
-            bidEvalEnd TEXT,
-            postQualStart TEXT,
-            postQualEnd TEXT,
-            reso TEXT,
-            noa TEXT,
-            ntp TEXT,
-            ntpRecieve TEXT,
-            contractDate TEXT,
-            lastUpdated TEXT NOT NULL
-          );
-        `);
+        await db.execute(createContractTable);
 
         console.log("Database and table initialized successfully.");
       } catch (error) {
