@@ -2,13 +2,13 @@
 "use client";
 import { format } from "date-fns";
 import { useSearchParams } from "next/navigation";
-import React, { useRef } from "react";
-import Draggable from "react-draggable";
+import React, { useRef } from "react"; // Remove useState
 import { formatNumber } from "../../../../config/formatNumber";
 import { amountToWords } from "../../../../config/amountToWords";
 
 const BondDetails = () => {
   const searchParams = useSearchParams();
+  console.log('searchParams', searchParams)
 
   // First, calculate the raw values
   const rawAmount = parseFloat(searchParams.get("amount") || "0");
@@ -55,44 +55,37 @@ const BondDetails = () => {
   };
   const contentRef = useRef(null);
 
-
   return (
     <div className="flex justify-center items-center w-screen h-full overflow-x-hidden">
       <div className="flex flex-col overflow-scroll overflow-x-hidden h-[calc(100vh-5rem)]">
         <div
           id="printable"
           ref={contentRef}
-          className="w-[210mm] tahoma h-[297mm] mx-auto text-center bg-white border border-gray-200 shadow-lg"
+          className="w-[210mm] tahoma h-[297mm] mx-auto text-center bg-white border border-gray-200 shadow-lg print:w-full"
         >
           {/* Header Section */}
           <div className="flex justify-between items-center p-14 pb-0 mb-[22px]">
-            <Draggable>
-              <img
-                src="/dpwhLogo.png"
-                alt="DPWH Logo"
-                className="h-24 w-24 object-contain"
-              />
-            </Draggable>
-            <Draggable>
-              <div className="text-[14px] text-black">
-                <p>Republic of the Philippines</p>
-                <p className="">
-                  DEPARTMENT OF PUBLIC WORKS AND HIGHWAYS
-                </p>
-                <p className="text-[12px] font-semibold">
-                  MINDORO OCCIDENTAL DISTRICT ENGINEERING OFFICE
-                </p>
-                <p className="text-[12px]">MIMAROPA REGION(IV-B)</p>
-                <p className="text-[12px]">Mamburao, Occidental Mindoro</p>
-              </div>
-            </Draggable>
-            <Draggable>
-              <img
-                src="/bagongPilipinas.png"
-                alt="Bagong Pilipinas"
-                className="h-24 w-24 object-contain"
-              />
-            </Draggable>
+            <img
+              src="/dpwhLogo.png"
+              alt="DPWH Logo"
+              className="h-24 w-24 object-contain"
+            />
+            <div className="text-[14px] text-black">
+              <p>Republic of the Philippines</p>
+              <p className="">
+                DEPARTMENT OF PUBLIC WORKS AND HIGHWAYS
+              </p>
+              <p className="text-[12px] font-semibold">
+                MINDORO OCCIDENTAL DISTRICT ENGINEERING OFFICE
+              </p>
+              <p className="text-[12px]">MIMAROPA REGION(IV-B)</p>
+              <p className="text-[12px]">Mamburao, Occidental Mindoro</p>
+            </div>
+            <img
+              src="/bagongPilipinas.png"
+              alt="Bagong Pilipinas"
+              className="h-24 w-24 object-contain"
+            />
           </div>
 
           <div className="p-[1in] pt-0">
@@ -257,13 +250,11 @@ const BondDetails = () => {
                   </div>
 
                   {/* Signature */}
-                  <Draggable>
-                    <div className="mt-10 mb-0 mr-0 ml-auto w-1/3 text-center">
-                      <div className="uppercase font-bold">{data.endUser}</div>
-                      <div>{data.endUserTitle}</div>
-                      <div>{data.designation}</div>
-                    </div>
-                  </Draggable>
+                  <div className="mt-10 mb-0 mr-0 ml-auto w-1/3 text-center">
+                    <div className="uppercase font-bold">{data.endUser}</div>
+                    <div>{data.endUserTitle}</div>
+                    <div>{data.designation}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -274,7 +265,7 @@ const BondDetails = () => {
       {/* Print Button */}
       <button
         onClick={()=>window.print()}
-        className="fixed bottom-10 right-10 btn btn-neutral mt-5"
+        className="fixed bottom-10 right-10 btn btn-neutral mt-5 print:hidden"
       >
         Print
       </button>
