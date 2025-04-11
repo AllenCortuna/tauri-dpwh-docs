@@ -423,9 +423,7 @@ const CreateNOA = () => {
           type="submit"
           target="_blank"
           rel="noopener noreferrer"
-          href={`http://localhost:9527/create-oblig/pdf?${new URLSearchParams(
-            data
-          ).toString()}`}
+          href={`http://localhost:9527/create-oblig/pdf?${new URLSearchParams(data).toString()}`}
           className="btn btn-neutral text-xs w-60 shadow-xl rounded-none"
         >
           Submit
