@@ -89,6 +89,12 @@ export default function Home() {
       subtitle: "Manage SQL queries and backup",
       href: "/sqlite",
     },
+    {
+      icon: <FaDatabase className="w-6 h-6" />,
+      title: "Localhost",
+      subtitle: "Fetch data from azure via localhost",
+      href: "/fetch-data",
+    },
   ];
 
   return (
