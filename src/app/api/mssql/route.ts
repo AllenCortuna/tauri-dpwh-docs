@@ -1,44 +1,33 @@
 import { NextResponse } from "next/server";
 import sql from "mssql";
-// Server=tcp:olsen.database.windows.net,1433;Initial Catalog=free-db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";
+
 const dbConfig = {
-  user: "tsa",
-  password: "Olsen_@30",
-  server: "olsen.database.windows.net",
-  database: "free-db",
-  port: 1433,
-  options: {
-    encrypt: true,
-    trustServerCertificate: false,
-    connectionTimeout: 30,
-    authentication: {
-      type: "active-directory-default",
+    user: 'tsa',
+    password: '12345678',
+    server: 'DESKTOP-16NDUR5',
+    database: 'infra',
+    port: 1433,  
+    options: {
+        trustServerCertificate: true,
+        trustedConnection: false,
+        enableArithAbort: true,
+        instancename: 'SQLEXPRESS'
     },
-  },
+    connectionTimeout: 30000,       // Increased timeout to 30 seconds
+    requestTimeout: 30000
 };
 
 export const dynamic = "force-static";
 
-export async function GET() {
+export async function POST(req: NextResponse) {
   try {
-    // await sql.connect('Server=localhost,1433;Database=database;User Id=username;Password=password;Encrypt=true')
+    console.log("Connected to MSSQL");
+    const data = await req.json();
+    console.log("Received data:", data);
     await sql.connect(dbConfig);
-    // CREATE TABLE mytable (
-    //   id INT PRIMARY KEY IDENTITY(1,1),
-    //   name NVARCHAR(100) NULL,
-    //   email NVARCHAR(100) NULL,
-    //   created_at DATETIME DEFAULT GETDATE()
-    // )
-
-    //  INSERT INTO mytable (name, email) VALUES
-    // ('John Doe', 'john@example.com'),
-    // ('Jane Smith', 'jane@example.com'),
-    // ('Bob Johnson', 'bob@example.com')
-    const result = await sql.query(`
-        SELECT * FROM mytable
-    `);
+    const result = await sql.query(data.query);
     console.log(result);
-    return NextResponse.json({ message: "Hello World", result });
+    return NextResponse.json({ result });
   } catch (error) {
     console.error("Error in root API route:", error);
     return NextResponse.json(

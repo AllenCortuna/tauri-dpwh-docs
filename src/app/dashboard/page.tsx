@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavLinks from "../components/ContractNav";
@@ -48,63 +48,66 @@ const Dashboard: React.FC = () => {
     const fetchDashboardStats = async () => {
       try {
         setIsLoading(true);
-        const db = await Database.load("sqlite:tauri.db");
 
         // Get total contracts
-        const totalContractsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contracts"
-        );
-
-        // Get total contractors
-        const totalContractorsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contractors"
-        );
-
-        // Get awarded contracts for current year
-        const awardedContractsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contracts WHERE status = 'awarded' AND year = ?",
-          [currentYear]
-        );
-
-        // Get posted contracts for current year
-        const postedContractsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contracts WHERE status = 'posted' AND year = ?",
-          [currentYear]
-        );
-
-        // Get proceed contracts for current year
-        const proceedContractsResult = await db.select<[{ count: number }]>(
-          "SELECT COUNT(*) as count FROM contracts WHERE status = 'proceed' AND year = ?",
-          [currentYear]
-        );
-
-        // Fetch the actual contract lists
-        const postedContractsList = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, contractor, status, bidding FROM contracts WHERE status = 'posted' AND year = ? ORDER BY bidding DESC",
-          [currentYear]
-        );
-
-        const awardedContractsList = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, contractor, status, bidding, noa FROM contracts WHERE status = 'awarded' AND year = ? ORDER BY noa DESC",
-          [currentYear]
-        );
-
-        const proceedContractsList = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, contractor, status, bidding, ntp FROM contracts WHERE status = 'proceed' AND year = ? ORDER BY ntp DESC",
-          [currentYear]
-        );
-
-        setStats({
-          totalContracts: totalContractsResult[0]?.count || 0,
-          totalContractors: totalContractorsResult[0]?.count || 0,
-          totalAwardedCurrentYear: awardedContractsResult[0]?.count || 0,
-          totalPostedCurrentYear: postedContractsResult[0]?.count || 0,
-          totalProceedCurrentYear: proceedContractsResult[0]?.count || 0,
+        const totalContractsResponse = await axios.post('/api/mssql', {
+          query: "SELECT COUNT(*) as count FROM contracts"
         });
 
-        setPostedContracts(postedContractsList);
-        setAwardedContracts(awardedContractsList);
-        setProceedContracts(proceedContractsList);
+        // Get total contractors
+        const totalContractorsResponse = await axios.post('/api/mssql', {
+          query: "SELECT COUNT(*) as count FROM contractors"
+        });
+
+        // Get awarded contracts for current year
+        const awardedResponse = await axios.post('/api/mssql', {
+          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'awarded' AND year = '${currentYear}'`
+        });
+
+        // Get posted contracts for current year
+        const postedResponse = await axios.post('/api/mssql', {
+          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'posted' AND year = '${currentYear}'`
+        });
+
+        // Get proceed contracts for current year
+        const proceedResponse = await axios.post('/api/mssql', {
+          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'proceed' AND year = '${currentYear}'`
+        });
+
+        // Fetch contract lists
+        const postedListResponse = await axios.post('/api/mssql', {
+          query: `SELECT id, contractID, projectName, contractor, status, bidding 
+                 FROM contracts 
+                 WHERE status = 'posted' AND year = '${currentYear}' 
+                 ORDER BY bidding DESC`
+        });
+
+        const awardedListResponse = await axios.post('/api/mssql', {
+          query: `SELECT id, contractID, projectName, contractor, status, bidding, noa 
+                 FROM contracts 
+                 WHERE status = 'awarded' AND year = '${currentYear}' 
+                 ORDER BY noa DESC`
+        });
+
+        const proceedListResponse = await axios.post('/api/mssql', {
+          query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
+                 FROM contracts 
+                 WHERE status = 'proceed' AND year = '${currentYear}' 
+                 ORDER BY ntp DESC`
+        });
+
+        setStats({
+          totalContracts: totalContractsResponse.data.result.recordset[0]?.count || 0,
+          totalContractors: totalContractorsResponse.data.result.recordset[0]?.count || 0,
+          totalAwardedCurrentYear: awardedResponse.data.result.recordset[0]?.count || 0,
+          totalPostedCurrentYear: postedResponse.data.result.recordset[0]?.count || 0,
+          totalProceedCurrentYear: proceedResponse.data.result.recordset[0]?.count || 0,
+        });
+
+        setPostedContracts(postedListResponse.data.result.recordset || []);
+        setAwardedContracts(awardedListResponse.data.result.recordset || []);
+        setProceedContracts(proceedListResponse.data.result.recordset || []);
+
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
         toast.error("Failed to fetch dashboard statistics");

@@ -92,7 +92,7 @@ export default function Home() {
     {
       icon: <FaDatabase className="w-6 h-6" />,
       title: "Localhost",
-      subtitle: "Fetch data from azure via localhost",
+      subtitle: "Fetch data via localhost",
       href: "/fetch-data",
     },
   ];
