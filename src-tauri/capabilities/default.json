@@ -14,10 +14,15 @@
     "fs:default",
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "$APPDATA/*" }]
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
     },
     "sql:default",
     "sql:allow-execute",
-    "dialog:default"
+    "dialog:default",
+    "log:default"
   ]
 }

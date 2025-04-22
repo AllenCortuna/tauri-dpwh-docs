@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReactPaginate from "react-paginate";
 import ViewModal from "./ViewModal";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import axios from "axios";
 
 interface Contract {
   id: number;
@@ -53,48 +53,41 @@ const AdvancedSearch: React.FC = () => {
   const [searchProjectName, setSearchProjectName] = useState<string>("");
   const [searchContractID, setSearchContractID] = useState<string>("");
 
-  // Modify handleSearch function
+  // Modify handleSearch function to use MSSQL
   const handleSearch = async () => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-      let query = `SELECT * FROM contracts WHERE year = ?`;
-      const params: string[] = [selectedYear];
+      let query = `SELECT * FROM contracts WHERE year = '${selectedYear}'`;
 
       if (contractor) {
-        query += ` AND contractor LIKE ?`;
-        params.push(`%${contractor}%`);
+        query += ` AND contractor LIKE '%${contractor}%'`;
       }
 
       if (batch) {
-        query += ` AND batch = ?`;
-        params.push(batch);
+        query += ` AND batch = '${batch}'`;
       }
 
       if (searchProjectName) {
-        query += ` AND projectName LIKE ?`;
-        params.push(`%${searchProjectName}%`);
+        query += ` AND projectName LIKE '%${searchProjectName}%'`;
       }
 
       if (searchContractID) {
-        query += ` AND contractID LIKE ?`;
-        params.push(`%${searchContractID}%`);
+        query += ` AND contractID LIKE '%${searchContractID}%'`;
       }
 
       if (biddingDateStart && biddingDateEnd) {
-        query += ` AND bidding BETWEEN ? AND ?`;
-        params.push(biddingDateStart, biddingDateEnd);
+        query += ` AND bidding BETWEEN '${biddingDateStart}' AND '${biddingDateEnd}'`;
       }
 
       if (awardDateStart && awardDateEnd) {
-        query += ` AND noa BETWEEN ? AND ?`;
-        params.push(awardDateStart, awardDateEnd);
+        query += ` AND noa BETWEEN '${awardDateStart}' AND '${awardDateEnd}'`;
       }
 
-      const result = await db.select<Contract[]>(query, params);
-      setContracts(result);
+      const response = await axios.post('/api/mssql', { query });
+      setContracts(response.data.result.recordset);
       setCurrentPage(0);
     } catch (error) {
       toast.error("Search failed");
+      toast.error((error as Error).message);
       console.error(error);
     }
   };

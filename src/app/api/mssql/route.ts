@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import sql from "mssql";
 
 const dbConfig = {
@@ -19,7 +19,7 @@ const dbConfig = {
 
 export const dynamic = "force-static";
 
-export async function POST(req: NextResponse) {
+export async function POST(req: NextRequest) {
   try {
     console.log("Connected to MSSQL");
     const data = await req.json();

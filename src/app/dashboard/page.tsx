@@ -4,6 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavLinks from "../components/ContractNav";
+import { error } from '@tauri-apps/plugin-log';
 
 interface Contract {
   id: number;
@@ -108,8 +109,15 @@ const Dashboard: React.FC = () => {
         setAwardedContracts(awardedListResponse.data.result.recordset || []);
         setProceedContracts(proceedListResponse.data.result.recordset || []);
 
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        console.error("Error fetching dashboard stats:", err);
+        // Log error to Tauri's logging system
+        await error(`Dashboard Stats Fetch Error: ${errorMessage}`);
+        // Log additional context if available
+        if (err instanceof Error && err.stack) {
+          await error(`Error Stack: ${err.stack}`);
+        }
         toast.error("Failed to fetch dashboard statistics");
       } finally {
         setIsLoading(false);
@@ -153,8 +161,8 @@ const Dashboard: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="flex justify-center w-full border border-red-500 items-center h-64">
+          <div className="loading loading-dots loading-xl"></div>
         </div>
       ) : (
         <>
