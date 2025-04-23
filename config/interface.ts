@@ -20,6 +20,17 @@ export interface Contract {
     contractDate?: string;
   }
 
+  export interface Contractor {
+    id: number;
+    contractorName: string;
+    email: string;
+    amo: string;
+    designation: string;
+    tin: string;
+    address: string;
+    lastUpdated: string;
+  }
+
   export interface ExcelRow {
     "Batch No.": string;
     "Year": string | number; // Modified to accept both string and number

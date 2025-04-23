@@ -17,9 +17,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [build-dependencies]
 tauri-build = { version = "2.0.4", features = [] }
 
+# Add these dependencies to your existing Cargo.toml
 [dependencies]
-serde_json = "1.0"
+tiberius = { version = "0.12.3", features = ["chrono", "tds73"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["compat"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
 log = "0.4"
 tauri = { version = "2.2.4", features = [] }
 tauri-plugin-log = "2"

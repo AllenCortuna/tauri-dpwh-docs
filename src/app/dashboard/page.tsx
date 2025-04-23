@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavLinks from "../components/ContractNav";
 import { error } from '@tauri-apps/plugin-log';
+import { invoke } from '@tauri-apps/api/core';
+import { Contractor } from "../../../config/interface";
 
 interface Contract {
   id: number;
@@ -51,63 +52,96 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
 
         // Get total contracts
-        const totalContractsResponse = await axios.post('/api/mssql', {
-          query: "SELECT COUNT(*) as count FROM contracts"
+        const totalContractsResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: "SELECT * FROM contracts"
+          }
         });
+        console.log('totalContractsResponse', totalContractsResponse)
 
         // Get total contractors
-        const totalContractorsResponse = await axios.post('/api/mssql', {
-          query: "SELECT COUNT(*) as count FROM contractors"
+        const totalContractorsResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: "SELECT * FROM contractors"
+          }
         });
 
         // Get awarded contracts for current year
-        const awardedResponse = await axios.post('/api/mssql', {
-          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'awarded' AND year = '${currentYear}'`
+        const awardedResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT * FROM contracts WHERE status = 'awarded' AND year = '${currentYear}'`
+          }
         });
 
         // Get posted contracts for current year
-        const postedResponse = await axios.post('/api/mssql', {
-          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'posted' AND year = '${currentYear}'`
+        const postedResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT * FROM contracts WHERE status = 'posted' AND year = '${currentYear}'`
+          }
         });
 
         // Get proceed contracts for current year
-        const proceedResponse = await axios.post('/api/mssql', {
-          query: `SELECT COUNT(*) as count FROM contracts WHERE status = 'proceed' AND year = '${currentYear}'`
+        const proceedResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT * FROM contracts WHERE status = 'proceed' AND year = '${currentYear}'`
+          }
         });
 
         // Fetch contract lists
-        const postedListResponse = await axios.post('/api/mssql', {
-          query: `SELECT id, contractID, projectName, contractor, status, bidding 
+        const postedListResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT id, contractID, projectName, contractor, status, bidding 
                  FROM contracts 
                  WHERE status = 'posted' AND year = '${currentYear}' 
                  ORDER BY bidding DESC`
+          }
         });
 
-        const awardedListResponse = await axios.post('/api/mssql', {
-          query: `SELECT id, contractID, projectName, contractor, status, bidding, noa 
+        const awardedListResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT id, contractID, projectName, contractor, status, bidding, noa 
                  FROM contracts 
                  WHERE status = 'awarded' AND year = '${currentYear}' 
                  ORDER BY noa DESC`
+          }
         });
 
-        const proceedListResponse = await axios.post('/api/mssql', {
-          query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
+        const proceedListResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
                  FROM contracts 
                  WHERE status = 'proceed' AND year = '${currentYear}' 
                  ORDER BY ntp DESC`
+          }
         });
 
         setStats({
-          totalContracts: totalContractsResponse.data.result.recordset[0]?.count || 0,
-          totalContractors: totalContractorsResponse.data.result.recordset[0]?.count || 0,
-          totalAwardedCurrentYear: awardedResponse.data.result.recordset[0]?.count || 0,
-          totalPostedCurrentYear: postedResponse.data.result.recordset[0]?.count || 0,
-          totalProceedCurrentYear: proceedResponse.data.result.recordset[0]?.count || 0,
+          totalContracts: (totalContractsResponse as { rows: Contract[] }).rows.length || 0,
+          totalContractors: (totalContractorsResponse as { rows: { count: Contractor }[] }).rows.length || 0,
+          totalAwardedCurrentYear: (awardedResponse as { rows: Contract[] }).rows.length || 0,
+          totalPostedCurrentYear: (postedResponse as { rows: Contract[] }).rows.length || 0,
+          totalProceedCurrentYear: (proceedResponse as { rows: Contract[] }).rows.length || 0,
         });
 
-        setPostedContracts(postedListResponse.data.result.recordset || []);
-        setAwardedContracts(awardedListResponse.data.result.recordset || []);
-        setProceedContracts(proceedListResponse.data.result.recordset || []);
+        // Fix the duplicate key issue by ensuring each contract has a unique key
+        // Add index to the contract ID if it's null
+        setPostedContracts(((postedListResponse as { rows: Contract[] }).rows || []).map((contract, index) => ({
+          ...contract,
+          id: contract.id || index + 1000 // Use index as fallback ID if contract.id is null
+        })));
+
+        setAwardedContracts(((awardedListResponse as { rows: Contract[] }).rows || []).map((contract, index) => ({
+          ...contract,
+          id: contract.id || index + 2000 // Use index as fallback ID if contract.id is null
+        })));
+
+        setProceedContracts(((proceedListResponse as { rows: Contract[] }).rows || []).map((contract, index) => ({
+          ...contract,
+          id: contract.id || index + 3000 // Use index as fallback ID if contract.id is null
+        })));
+        // Remove these duplicate setState calls as they're already handled above
+        setAwardedContracts((awardedListResponse as { rows: Contract[] }).rows || []);
+        setProceedContracts((proceedListResponse as { rows: Contract[] }).rows || []);
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -161,7 +195,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center w-full border border-red-500 items-center h-64">
+        <div className="flex justify-center w-full items-center h-64">
           <div className="loading loading-dots loading-xl"></div>
         </div>
       ) : (
