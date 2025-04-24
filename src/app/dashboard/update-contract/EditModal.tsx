@@ -1,7 +1,7 @@
 // EditModal.tsx
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Contract {
   id: number;
@@ -61,9 +61,12 @@ const EditModal: React.FC<EditModalProps> = ({
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
-        setContractors(contractorsResult);
+        const result: { rows: Contractor[]} = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: "SELECT id,* FROM contractors"
+          }
+        });
+        setContractors(result.rows);
       } catch (error) {
         console.error("Error fetching contractors:", error);
       }

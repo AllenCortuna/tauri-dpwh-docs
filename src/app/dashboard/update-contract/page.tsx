@@ -70,37 +70,29 @@ const SearchContracts: React.FC = () => {
   // Modify handleSearch to include year filter
   const handleSearch = async () => {
     try {
-      let query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND `;
-      const params: string[] = [selectedYear];
+      let query = ``;
 
       switch (searchType) {
         case "batch":
-          query += `batch LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
-          break;
-        case "year":
-          query += `year LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
+          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND batch LIKE ${searchQuery}`;
           break;
         case "contractID":
-          query += `contractID LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
+          console.log('searchQuery', searchQuery)
+          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND contractID = '${searchQuery}'`;
           break;
         case "bidding":
-          query += `bidding LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
+          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND bidding LIKE '${searchQuery}'`;
           break;
         case "projectName":
-          query += `projectName LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
+          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND projectName LIKE '%${searchQuery}'`;
           break;
         case "contractor":
-          query += `contractor LIKE ${searchQuery}`;
-          params.push(`%${searchQuery}%`);
+          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND contractor LIKE '%${searchQuery}%'`;
           break;
         default:
           query += `1=1`;
       }
+      console.log('query', query)
       const result :{rows: Contract[]} = await invoke("execute_mssql_query", {
         queryRequest: {
           query
@@ -108,6 +100,7 @@ const SearchContracts: React.FC = () => {
       });
 
       setContracts(result.rows);
+      console.log('result.rows', result.rows)
       setCurrentPage(0); // Reset to first page after search
     } catch (error) {
       toast.error("Failed to search contracts.");
@@ -163,7 +156,7 @@ const SearchContracts: React.FC = () => {
         ntpRecieve = @p18,
         contractDate = @p19,
         lastUpdated = GETDATE()
-        WHERE id = @p20`;
+        WHERE contractID = @p20`;
 
       await invoke("execute_mssql_query", {
         queryRequest: { 
@@ -188,7 +181,7 @@ const SearchContracts: React.FC = () => {
             editFormData?.ntp || '',
             editFormData?.ntpRecieve || '',
             editFormData?.contractDate || '',
-            editFormData?.id?.toString() || ''
+            editFormData?.contractID|| ''
           ]
         }
       });
