@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ReactPaginate from "react-paginate";
 import ViewModal from "./ViewModal";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
-import axios from "axios";
+import { invoke } from '@tauri-apps/api/core';
 
 interface Contract {
   id: number;
@@ -56,34 +56,46 @@ const AdvancedSearch: React.FC = () => {
   // Modify handleSearch function to use MSSQL
   const handleSearch = async () => {
     try {
-      let query = `SELECT * FROM contracts WHERE year = '${selectedYear}'`;
+      let query = `SELECT * FROM contracts WHERE year = ${selectedYear}`;
+      const params = [selectedYear];
 
       if (contractor) {
-        query += ` AND contractor LIKE '%${contractor}%'`;
+        query += ` AND contractor LIKE @contractor`;
+        params.push(`%${contractor}%`);
       }
 
       if (batch) {
-        query += ` AND batch = '${batch}'`;
+        query += ` AND batch = ${batch}`;
+        params.push(batch);
       }
 
       if (searchProjectName) {
-        query += ` AND projectName LIKE '%${searchProjectName}%'`;
+        query += ` AND projectName LIKE '${searchProjectName}%'`;
+        params.push(`%${searchProjectName}%`);
       }
 
       if (searchContractID) {
-        query += ` AND contractID LIKE '%${searchContractID}%'`;
+        query += ` AND contractID LIKE '${searchContractID}%'`;
+        params.push(`%${searchContractID}%`);
       }
 
       if (biddingDateStart && biddingDateEnd) {
         query += ` AND bidding BETWEEN '${biddingDateStart}' AND '${biddingDateEnd}'`;
+        params.push(biddingDateStart, biddingDateEnd);
       }
 
       if (awardDateStart && awardDateEnd) {
         query += ` AND noa BETWEEN '${awardDateStart}' AND '${awardDateEnd}'`;
+        params.push(awardDateStart, awardDateEnd);
       }
 
-      const response = await axios.post('/api/mssql', { query });
-      setContracts(response.data.result.recordset);
+      const response :{rows: Contract[]} = await invoke("execute_mssql_query", {
+        queryRequest: {
+          query
+        }
+      });
+      console.log('response', response)
+      setContracts(response.rows as Contract[]);
       setCurrentPage(0);
     } catch (error) {
       toast.error("Search failed");
@@ -319,7 +331,7 @@ const AdvancedSearch: React.FC = () => {
               <tbody className="text-xs">
                 {currentContracts.map((contract) => (
                   <tr
-                    key={contract.id}
+                    key={contract.contractID}
                     className="border-t hover:bg-gray-50 text-zinc-600"
                   >
                     <td className="p-3">{contract.contractID}</td>

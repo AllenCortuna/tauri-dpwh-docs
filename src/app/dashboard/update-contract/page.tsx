@@ -1,11 +1,11 @@
 // SearchContracts.tsx
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReactPaginate from "react-paginate";
 import EditModal from "./EditModal";
+import { invoke } from '@tauri-apps/api/core';
 
 interface Contract {
   id: number;
@@ -49,12 +49,12 @@ const SearchContracts: React.FC = () => {
   // Modify fetchContracts to include year filter
   const fetchContracts = async () => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-      const result = await db.select<Contract[]>(
-        "SELECT * FROM contracts WHERE year = ?",
-        [selectedYear]
-      );
-      setContracts(result);
+      const result :{rows: Contract[]} = await invoke("execute_mssql_query", {
+        queryRequest: {
+          query:  `SELECT * FROM contracts WHERE year = ${selectedYear}`
+        }
+      });
+      setContracts(result.rows);
     } catch (error) {
       toast.error("Failed to fetch contracts.");
       console.error(error);
@@ -70,41 +70,44 @@ const SearchContracts: React.FC = () => {
   // Modify handleSearch to include year filter
   const handleSearch = async () => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-      let query = "SELECT * FROM contracts WHERE year = ? AND ";
+      let query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND `;
       const params: string[] = [selectedYear];
 
       switch (searchType) {
         case "batch":
-          query += `batch LIKE ?`;
+          query += `batch LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         case "year":
-          query += `year LIKE ?`;
+          query += `year LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         case "contractID":
-          query += `contractID LIKE ?`;
+          query += `contractID LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         case "bidding":
-          query += `bidding LIKE ?`;
+          query += `bidding LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         case "projectName":
-          query += `projectName LIKE ?`;
+          query += `projectName LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         case "contractor":
-          query += `contractor LIKE ?`;
+          query += `contractor LIKE ${searchQuery}`;
           params.push(`%${searchQuery}%`);
           break;
         default:
           query += `1=1`;
       }
+      const result :{rows: Contract[]} = await invoke("execute_mssql_query", {
+        queryRequest: {
+          query
+        }
+      });
 
-      const result = await db.select<Contract[]>(query, params);
-      setContracts(result);
+      setContracts(result.rows);
       setCurrentPage(0); // Reset to first page after search
     } catch (error) {
       toast.error("Failed to search contracts.");
@@ -130,8 +133,6 @@ const SearchContracts: React.FC = () => {
   // Handle update contract
   const handleUpdateContract = async () => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-  
       // Determine status based on noa and ntp
       let status = "posted";
       if (editFormData?.noa) {
@@ -141,53 +142,56 @@ const SearchContracts: React.FC = () => {
         status = "proceed";
       } 
 
-  
-      await db.execute(
-        `UPDATE contracts SET 
-        batch = ?,
-        year = ?,
-        posting = ?,
-        preBid = ?,
-        bidding = ?,
-        contractID = ?,
-        projectName = ?,
-        status = ?,
-        contractAmount = ?,
-        contractor = ?,
-        bidEvalStart = ?,
-        bidEvalEnd = ?,
-        postQualStart = ?,
-        postQualEnd = ?,
-        reso = ?,
-        noa = ?,
-        ntp = ?,
-        ntpRecieve = ?,
-        contractDate = ?,
-        lastUpdated = CURRENT_TIMESTAMP
-        WHERE id = ?`,
-        [
-          editFormData?.batch,
-          editFormData?.year,
-          editFormData?.posting,
-          editFormData?.preBid,
-          editFormData?.bidding,
-          editFormData?.contractID,
-          editFormData?.projectName,
-          status, // Use the calculated status instead of editFormData?.status
-          editFormData?.contractAmount,
-          editFormData?.contractor,
-          editFormData?.bidEvalStart,
-          editFormData?.bidEvalEnd,
-          editFormData?.postQualStart,
-          editFormData?.postQualEnd,
-          editFormData?.reso,
-          editFormData?.noa,
-          editFormData?.ntp,
-          editFormData?.ntpRecieve,
-          editFormData?.contractDate,
-          editFormData?.id
-        ]
-      );
+      const query = `UPDATE contracts SET 
+        batch = @p1,
+        year = @p2,
+        posting = @p3,
+        preBid = @p4,
+        bidding = @p5,
+        contractID = @p6,
+        projectName = @p7,
+        status = @p8,
+        contractAmount = @p9,
+        contractor = @p10,
+        bidEvalStart = @p11,
+        bidEvalEnd = @p12,
+        postQualStart = @p13,
+        postQualEnd = @p14,
+        reso = @p15,
+        noa = @p16,
+        ntp = @p17,
+        ntpRecieve = @p18,
+        contractDate = @p19,
+        lastUpdated = GETDATE()
+        WHERE id = @p20`;
+
+      await invoke("execute_mssql_query", {
+        queryRequest: { 
+          query,
+          params: [
+            editFormData?.batch || '',
+            editFormData?.year || '',
+            editFormData?.posting || '',
+            editFormData?.preBid || '',
+            editFormData?.bidding || '',
+            editFormData?.contractID || '',
+            editFormData?.projectName || '',
+            status,
+            editFormData?.contractAmount || '',
+            editFormData?.contractor || '',
+            editFormData?.bidEvalStart || '',
+            editFormData?.bidEvalEnd || '',
+            editFormData?.postQualStart || '',
+            editFormData?.postQualEnd || '',
+            editFormData?.reso || '',
+            editFormData?.noa || '',
+            editFormData?.ntp || '',
+            editFormData?.ntpRecieve || '',
+            editFormData?.contractDate || '',
+            editFormData?.id?.toString() || ''
+          ]
+        }
+      });
       
       toast.success("Contract updated successfully");
       setIsEditModalOpen(false);
@@ -278,7 +282,7 @@ const SearchContracts: React.FC = () => {
           <tbody>
             {currentContracts.map((contract) => (
               <tr
-                key={contract.id}
+                key={contract.contractID}
                 className="border-t hover:bg-gray-50 transition duration-200"
               >
                 <td className="p-3 text-gray-700">{contract.batch}</td>
