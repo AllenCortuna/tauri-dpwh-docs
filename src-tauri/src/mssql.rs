@@ -126,6 +126,6 @@ pub async fn execute_mssql_query(query_request: QueryRequest) -> Result<QueryRes
         result_rows.push(row_map);
     }
 
-    println!("Query result: {:?}", result_rows); //debug
+    // println!("Query result: {:?}", result_rows); //debug
     Ok(QueryResult { rows: result_rows })
 }
