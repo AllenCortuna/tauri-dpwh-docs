@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, ChangeEvent, useEffect, useRef } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface BidderData {
   name: string;
@@ -42,8 +42,14 @@ const BidderTable: React.FC<BidderTableProps> = ({ inputArr, setInputArr }) => {
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contractors",
+            params: []
+          }
+        });
+        
+        const contractorsResult = (result as {rows: Contractor[]}).rows;
         setContractors(contractorsResult);
       } catch (error) {
         console.error("Error fetching contractors:", error);

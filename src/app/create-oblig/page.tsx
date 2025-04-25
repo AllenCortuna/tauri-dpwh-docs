@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Contractor {
   id: number;
@@ -61,17 +61,23 @@ const CreateNOA = () => {
     
     const fetchData = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        
         // Fetch contractors
-        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
-        setContractors(contractorsResult);
+        const contractorsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contractors",
+            params: []
+          }
+        });
+        setContractors((contractorsResult as {rows: Contractor[]}).rows);
         
         // Fetch contracts
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
-        setContracts(contractsResult);
+        const contractsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            params: []
+          }
+        });
+        setContracts((contractsResult as {rows: Contract[]}).rows);
       } catch (error) {
         console.error("Error fetching data:", error);
       }

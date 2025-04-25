@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Contractor {
   contractorName: string;
@@ -20,11 +20,13 @@ const ExportContractors: React.FC = () => {
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const result = await db.select<Contractor[]>(
-          "SELECT * FROM contractors"
-        );
-        setContractors(result);
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contractors",
+            params: []
+          }
+        });
+        setContractors((result as {rows: Contractor[]}).rows);
       } catch (error) {
         console.error("Failed to fetch contractors:", error);
         alert("Failed to fetch contractors.");
@@ -80,8 +82,8 @@ const ExportContractors: React.FC = () => {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold mb-2">Export Contractors</h2>
-        <p className="text-gray-600 text-sm mb-4">
+        <h2 className="text-xl font-bold mb-4 text-lime-700">Export Contractors</h2>
+        <p className="text-gray-600 text-xs mb-4">
           Download contractors data as Excel file
         </p>
       </div>

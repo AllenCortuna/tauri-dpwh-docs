@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaUsers, FaUserTie, FaBuilding } from "react-icons/fa";
 import { BsPersonVcard } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import ContractorNav from "../components/ContractorNav";
+import { invoke } from '@tauri-apps/api/core';
 import { 
   Chart as ChartJS, 
   ArcElement, 
@@ -68,42 +68,60 @@ const ContractorsDashboard: React.FC = () => {
   const fetchContractorStats = async () => {
     try {
       setIsLoading(true);
-      const db = await Database.load("sqlite:tauri.db");
 
-      // Get all stats in a single query for better performance
-      const statsQueries = [
-        "SELECT COUNT(*) as count FROM contractors",
-        "SELECT COUNT(*) as count FROM contractors WHERE email IS NOT NULL AND email != ''",
-        "SELECT COUNT(*) as count FROM contractors WHERE tin IS NOT NULL AND tin != ''",
-        "SELECT COUNT(*) as count FROM contractors WHERE amo IS NOT NULL AND amo != ''",
-        "SELECT COUNT(*) as count FROM contractors WHERE designation IS NOT NULL AND designation != ''"
-      ];
-      
-      // Execute all queries in parallel
-      const [
-        totalContractorsResult,
-        withEmailResult,
-        withTINResult,
-        withAMOResult,
-        withDesignationResult
-      ] = await Promise.all(
-        statsQueries.map(query => db.select<[{ count: number }]>(query))
-      );
-
-      // Get recent contractors
-      const recentContractorsResult = await db.select<Contractor[]>(
-        "SELECT * FROM contractors ORDER BY lastUpdated DESC LIMIT 5"
-      );
-
-      setStats({
-        totalContractors: totalContractorsResult[0]?.count || 0,
-        totalWithEmail: withEmailResult[0]?.count || 0,
-        totalWithTIN: withTINResult[0]?.count || 0,
-        totalWithAMO: withAMOResult[0]?.count || 0,
-        totalWithDesignation: withDesignationResult[0]?.count || 0,
+      // Get total contractors count
+      const totalContractorsResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT * FROM contractors"
+        }
       });
 
-      setRecentContractors(recentContractorsResult);
+      // Get contractors with email count
+      const withEmailResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT * FROM contractors WHERE email IS NOT NULL AND email != ''"
+        }
+      });
+
+      // Get contractors with TIN count
+      const withTINResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT * FROM contractors WHERE tin IS NOT NULL AND tin != ''"
+        }
+      });
+
+      // Get contractors with AMO count
+      const withAMOResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT * FROM contractors WHERE amo IS NOT NULL AND amo != ''"
+        }
+      });
+
+      // Get contractors with designation count
+      const withDesignationResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT * FROM contractors WHERE designation IS NOT NULL AND designation != ''"
+        }
+      });
+
+      // Get recent contractors
+      const recentContractorsResult = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT TOP 5 * FROM contractors ORDER BY lastUpdated DESC"
+        }
+      });
+      console.log('recentContractorsResult', recentContractorsResult)
+      
+
+      setStats({
+        totalContractors: (totalContractorsResult as {rows: Contractor[]}).rows.length || 0,
+        totalWithEmail: (withEmailResult as {rows: Contractor[]}).rows.length || 0,
+        totalWithTIN: (withTINResult as {rows: Contractor[]}).rows.length || 0,
+        totalWithAMO: (withAMOResult as {rows: Contractor[]}).rows.length || 0,
+        totalWithDesignation: (withDesignationResult as {rows: Contractor[]}).rows.length || 0,
+      });
+
+      setRecentContractors((recentContractorsResult as {rows: Contractor[]}).rows || 0);
     } catch (error) {
       console.error("Error fetching contractor stats:", error);
       toast.error("Failed to fetch contractor statistics");
@@ -258,7 +276,7 @@ const ContractorsDashboard: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 text-xs">
                   {recentContractors.map((contractor) => (
-                    <tr key={contractor.id}>
+                    <tr key={contractor.contractorName}>
                       <td className="px-6 py-4 uppercase font-semibold text-zinc-600">
                         {contractor.contractorName}
                       </td>

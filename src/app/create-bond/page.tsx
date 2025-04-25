@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Contract {
   id: number;
@@ -42,11 +42,13 @@ const CreateBonds = () => {
   useEffect(() => {
     const fetchContracts = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
-        setContracts(contractsResult);
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            params: []
+          }
+        });
+        setContracts((result as {rows: Contract[]}).rows);
       } catch (error) {
         console.error("Error fetching contracts:", error);
       }
@@ -54,6 +56,9 @@ const CreateBonds = () => {
 
     fetchContracts();
   }, []);
+
+  console.log('contracts', contracts)
+
 
   // Handle click outside dropdown
   useEffect(() => {
@@ -88,15 +93,23 @@ const CreateBonds = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
-        setContracts(contractsResult);
+        // Fetch contracts
+        const contractsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            params: []
+          }
+        });
+        setContracts((contractsResult as {rows: Contract[]}).rows);
         
         // Add contractors fetch
-        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
-        setContractors(contractorsResult);
+        const contractorsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contractors",
+            params: []
+          }
+        });
+        setContractors((contractorsResult as {rows: Contractor[]}).rows);
       } catch (error) {
         console.error("Error fetching data:", error);
       }

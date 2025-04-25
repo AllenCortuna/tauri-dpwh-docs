@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
-import Database from "@tauri-apps/plugin-sql";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { useCallback } from "react";
 import debounce from "lodash/debounce";
 import { successToast } from "../../../../config/toast";
 import { ToastContainer } from "react-toastify";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Mailing {
   id: number;
@@ -26,36 +26,29 @@ const SearchMailings: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedMailing, setSelectedMailing] = useState<Mailing | null>(null);
+  const [selectedMailingName, setSelectedMailingName] = useState<string>("");
   const itemsPerPage = 10;
 
-  // Initialize database on component mount
-  useEffect(() => {
-    const initializeDatabase = async () => {
-      try {
-        await Database.load("sqlite:tauri.db");
-        console.log("Database connected successfully");
-      } catch (error) {
-        console.error("Database connection error:", error);
-      }
-    };
-
-    initializeDatabase();
-  }, []);
+  // Remove database initialization since we're using MSSQL
+  useEffect(() => {}, []);
 
   const handleSearch = async () => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-
       // Build the SQL query based on the search field and term
-      const query = `SELECT * FROM contractors WHERE ${searchField} LIKE ?`;
+      const query = `SELECT * FROM contractors WHERE ${searchField} LIKE @p1`;
       const searchPattern = `%${searchTerm}%`;
 
-      // Execute the query
-      const result = await db.select<Mailing[]>(query, [searchPattern]);
+      // Execute the query using invoke
+      const result = await invoke("execute_mssql_query", {
+        queryRequest: {
+          query,
+          params: [searchPattern],
+        },
+      });
 
       // Update state with results
-      setMailings(result);
-      setTotalPages(Math.ceil(result.length / itemsPerPage));
+      setMailings((result as { rows: Mailing[] }).rows);
+      setTotalPages(Math.ceil((result as{ rows: Mailing[] }).rows.length / itemsPerPage));
       setCurrentPage(0);
     } catch (error) {
       console.error("Search error:", error);
@@ -66,28 +59,30 @@ const SearchMailings: React.FC = () => {
     if (!selectedMailing) return;
 
     try {
-      const db = await Database.load("sqlite:tauri.db");
-
-      // Update the contractor in the database
-      await db.execute(
-        `UPDATE contractors SET 
-          contractorName = ?, 
-          email = ?, 
-          amo = ?, 
-          tin = ?, 
-          address = ?, 
-          lastUpdated = ?
-        WHERE id = ?`,
-        [
-          selectedMailing.contractorName,
-          selectedMailing.email,
-          selectedMailing.amo,
-          selectedMailing.tin,
-          selectedMailing.address,
-          new Date().toISOString(),
-          selectedMailing.id,
-        ]
-      );
+      // Update the contractor in the database using invoke
+      await invoke("execute_mssql_query", {
+        queryRequest: {
+          query: `
+            UPDATE contractors SET 
+              contractorName = @p1, 
+              email = @p2, 
+              amo = @p3, 
+              tin = @p4, 
+              address = @p5, 
+              lastUpdated = @p6
+            WHERE contractorName = @p7
+          `,
+          params: [
+            selectedMailing.contractorName,
+            selectedMailing.email,
+            selectedMailing.amo,
+            selectedMailing.tin,
+            selectedMailing.address,
+            new Date().toISOString(),
+            selectedMailingName // Use selectedMailingName as the unique identifier
+          ],
+        },
+      });
 
       // Refresh search results
       handleSearch();
@@ -99,9 +94,9 @@ const SearchMailings: React.FC = () => {
     }
   };
 
-  const handleDeleteMailing = async (id: number) => {
+  const handleDeleteMailing = async (contractorName: string) => {
     // Get the contractor name for the confirmation message
-    const contractor = mailings.find((m) => m.id === id);
+    const contractor = mailings.find((m) => m.contractorName === contractorName);
     if (!contractor) return;
 
     // Show confirmation dialog
@@ -113,10 +108,13 @@ const SearchMailings: React.FC = () => {
     if (!confirmation) return;
 
     try {
-      const db = await Database.load("sqlite:tauri.db");
-
-      // Delete the contractor from the database
-      await db.execute(`DELETE FROM contractors WHERE id = ?`, [id]);
+      // Delete the contractor using invoke
+      await invoke("execute_mssql_query", {
+        queryRequest: {
+          query: "DELETE FROM contractors WHERE contractorName = @p1",
+          params: [contractorName],
+        },
+      });
 
       // Refresh search results
       handleSearch();
@@ -124,6 +122,30 @@ const SearchMailings: React.FC = () => {
       console.error("Delete error:", error);
     }
   };
+
+  // Update the debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (term: string, field: string) => {
+      try {
+        const query = `SELECT * FROM contractors WHERE ${field} LIKE @p1`;
+        const searchPattern = `%${term}%`;
+
+        const result = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query,
+            params: [searchPattern],
+          },
+        });
+
+        setMailings((result as {rows: Mailing[]}).rows);
+        setTotalPages(Math.ceil((result as {rows: Mailing[]}).rows.length / itemsPerPage));
+        setCurrentPage(0);
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    }, 300),
+    []
+  );
 
   const displayedMailings = mailings.slice(
     currentPage * itemsPerPage,
@@ -133,26 +155,6 @@ const SearchMailings: React.FC = () => {
   const handlePageClick = (data: { selected: number }) => {
     setCurrentPage(data.selected);
   };
-
-  // Create a debounced search function
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSearch = useCallback(
-    debounce(async (term: string, field: string) => {
-      try {
-        const db = await Database.load("sqlite:tauri.db");
-        const query = `SELECT * FROM contractors WHERE ${field} LIKE ?`;
-        const searchPattern = `%${term}%`;
-        const result = await db.select<Mailing[]>(query, [searchPattern]);
-
-        setMailings(result);
-        setTotalPages(Math.ceil(result.length / itemsPerPage));
-        setCurrentPage(0);
-      } catch (error) {
-        console.error("Search error:", error);
-      }
-    }, 300), // 300ms delay
-    []
-  );
 
   // Update the input handler
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +209,7 @@ const SearchMailings: React.FC = () => {
             </thead>
             <tbody>
               {displayedMailings.map((mailing) => (
-                <tr key={mailing.id} className="text-xs text-zinc-500">
+                <tr key={mailing.contractorName} className="text-xs text-zinc-500">
                   <td className="uppercase font-semibold text-zinc-600">
                     <button
                       data-tip="Copy to clipboard"
@@ -241,6 +243,7 @@ const SearchMailings: React.FC = () => {
                       className="btn btn-xs text-neutral btn-outline rounded-none"
                       onClick={() => {
                         setSelectedMailing(mailing);
+                        setSelectedMailingName(mailing.contractorName);
                         (
                           document.getElementById(
                             "edit_modal"
@@ -252,7 +255,7 @@ const SearchMailings: React.FC = () => {
                     </button>
                     <button
                       className="btn btn-xs text-red-500 btn-outline rounded-none"
-                      onClick={() => handleDeleteMailing(mailing.id)}
+                      onClick={() => handleDeleteMailing(mailing.contractorName)}
                     >
                       Delete
                     </button>

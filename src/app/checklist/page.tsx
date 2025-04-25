@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readDir } from "@tauri-apps/plugin-fs";
 import { FaCheck, FaPlus } from "react-icons/fa";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Contract {
   id: number;
@@ -72,17 +72,20 @@ const Checklist: React.FC = () => {
     const fetchContracts = async () => {
       try {
         setIsLoading(true);
-        const db = await Database.load("sqlite:tauri.db");
+        
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT contractID, projectName, status, year FROM contracts WHERE year = @p1 ORDER BY contractID",
+            params: [currentYear]
+          }
+        });
 
-        const contractsList = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, status, year FROM contracts WHERE year = ? ORDER BY contractID",
-          [currentYear]
-        );
-
+        const contractsList = (result as {rows: Contract[]}).rows;
         const contractsWithStatus = contractsList.map((contract) => ({
           ...contract,
           hasMatchingFile: false,
         }));
+        
         setContracts(contractsWithStatus);
         applyFilters(contractsWithStatus);
       } catch (error) {
@@ -94,7 +97,6 @@ const Checklist: React.FC = () => {
     };
 
     fetchContracts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear]);
 
   const applyFilters = (contractsToFilter: Contract[]) => {
@@ -250,7 +252,7 @@ const Checklist: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200 text-xs">
                 {filteredContracts.length > 0 ? (
                   filteredContracts.map((contract) => (
-                    <tr key={contract.id}>
+                    <tr key={contract.contractID}>
                       <td className="px-6 py-4 text-primary font-bold tooltip-right tooltip" data-tip={contract.status}>
                         {contract.contractID}
                       </td>

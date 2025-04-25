@@ -8,7 +8,7 @@ import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
 import { formatNumber } from "../../../config/formatNumber";
 import { formatDate } from "../../../config/convertToDate";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Bidder {
   name: string;
@@ -67,10 +67,14 @@ const Create3Strike = () => {
   useEffect(() => {
     const fetchContracts = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            params: []
+          }
+        });
+
+        const contractsResult = (result as {rows: Contract[]}).rows;
         setContracts(contractsResult);
       } catch (error) {
         console.error("Error fetching contracts:", error);

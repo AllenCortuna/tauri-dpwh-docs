@@ -49,8 +49,8 @@ export default function Home() {
     },
     {
       icon: <FaFileExcel className="w-6 h-6" />,
-      title: "Upload Excel",
-      subtitle: "Upload Excel files",
+      title: "Export Excel",
+      subtitle: "Export data to xls files",
       href: "/upload-xlsx",
     },
     {
@@ -88,13 +88,7 @@ export default function Home() {
       title: "Database",
       subtitle: "Manage SQL queries and backup",
       href: "/sqlite",
-    },
-    {
-      icon: <FaDatabase className="w-6 h-6" />,
-      title: "Localhost",
-      subtitle: "Fetch data via localhost",
-      href: "/fetch-data",
-    },
+    }
   ];
 
   return (

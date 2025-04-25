@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
 import * as XLSX from "xlsx";
 import { errorToast } from "../../../../config/toast";
 import { FiDownload } from "react-icons/fi";
 import { Contract } from "../../../../config/interface";
+import { invoke } from "@tauri-apps/api/core";
 
 interface ExcelRow {
   "Batch No.": string;
@@ -35,9 +35,13 @@ const ExportContracts: React.FC = () => {
   useEffect(() => {
     const fetchContracts = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const result = await db.select<Contract[]>("SELECT * FROM contracts");
-        setContracts(result);
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contracts",
+            params: []
+          }
+        });
+        setContracts((result as {rows: Contract[]}).rows);
       } catch (error) {
         console.error("Failed to fetch contracts:", error);
         errorToast("Failed to fetch contracts.");
@@ -102,8 +106,8 @@ const ExportContracts: React.FC = () => {
           <div className="mb-4">
             <FiDownload className="h-12 w-12 text-gray-600" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">Export Contracts</h2>
-          <p className="text-gray-600 text-sm mb-4">
+          <h2 className="text-xl font-bold text-lime-700 mb-4">Export Contracts</h2>
+          <p className="text-gray-600 text-xs mb-4">
             Download contracts data as Excel file
           </p>
           {isLoading && <span className="text-gray-500">Exporting...</span>}

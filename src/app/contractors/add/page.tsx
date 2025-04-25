@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Database from "@tauri-apps/plugin-sql";
+import React, { useState } from "react";
 import Link from "next/link";
 import { FaUsers } from "react-icons/fa";
 import { errorToast, successToast } from "../../../../config/toast";
+import { invoke } from '@tauri-apps/api/core';
 
 interface Contractor {
   contractorName: string;
@@ -16,7 +16,6 @@ interface Contractor {
 
 const CreateContractors: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const [contractors, setContractors] = useState<Contractor[]>([
     {
       contractorName: "",
@@ -27,36 +26,6 @@ const CreateContractors: React.FC = () => {
       tin: "",
     },
   ]);
-
-  // Initialize the database and create the table if it doesn't exist
-  useEffect(() => {
-    const initializeDatabase = async () => {
-      try {
-        const db = await Database.load("sqlite:tauri.db");
-
-        // Create the contractors table if it doesn't exist
-        await db.execute(`
-          CREATE TABLE IF NOT EXISTS contractors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contractorName TEXT NOT NULL,
-            address TEXT NOT NULL,
-            email TEXT,
-            amo TEXT,
-            designation TEXT,
-            tin TEXT,
-            lastUpdated TEXT NOT NULL
-          );
-        `);
-
-        console.log("Database and contractors table initialized successfully.");
-      } catch (error) {
-        console.error("Failed to initialize database:", error);
-        errorToast("Failed to initialize database.");
-      }
-    };
-
-    initializeDatabase();
-  }, []);
 
   const handleContractorChange = (
     index: number,
@@ -92,23 +61,25 @@ const CreateContractors: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const db = await Database.load("sqlite:tauri.db");
-
       for (const contractor of contractors) {
-        await db.execute(
-          `INSERT INTO contractors (
-            contractorName, address, email, amo, designation, tin, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            contractor.contractorName,
-            contractor.address,
-            contractor.email,
-            contractor.amo,
-            contractor.designation,
-            contractor.tin,
-            new Date().toISOString(),
-          ]
-        );
+        await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: `
+              INSERT INTO contractors (
+                contractorName, address, email, amo, designation, tin, lastUpdated
+              ) VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7)
+            `,
+            params: [
+              contractor.contractorName,
+              contractor.address,
+              contractor.email,
+              contractor.amo,
+              contractor.designation,
+              contractor.tin,
+              new Date().toISOString(),
+            ]
+          }
+        });
       }
 
       setContractors([
@@ -125,10 +96,10 @@ const CreateContractors: React.FC = () => {
       successToast("Contractors submitted successfully!");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        successToast(`Error: ${error.message}`);
+        errorToast(`Error: ${error.message}`);
       } else {
         console.error("An unknown error occurred:", error);
-        successToast("An unknown error occurred.");
+        errorToast("An unknown error occurred.");
       }
     } finally {
       setIsLoading(false);

@@ -23,6 +23,7 @@
     "sql:default",
     "sql:allow-execute",
     "dialog:default",
-    "log:default"
+    "log:default",
+    "dialog:default"
   ]
 }

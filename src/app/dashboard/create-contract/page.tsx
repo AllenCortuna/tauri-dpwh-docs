@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import { ToastContainer } from "react-toastify";
-import Database from "@tauri-apps/plugin-sql";
 import { errorToast, successToast } from "../../../../config/toast";
-import { createContractTable } from "../../../../config/query";
+import { invoke } from '@tauri-apps/api/core';
 
 interface Contract {
   contractID: string;
@@ -39,26 +38,6 @@ const CreateContracts: React.FC = () => {
   const [contracts, setContracts] = useState<Contract[]>([
     { contractID: "", projectName: "" },
   ]);
-
-  // Initialize the database and create the table if it doesn't exist
-  useEffect(() => {
-    const initializeDatabase = async () => {
-      try {
-        // Connect to SQLite instead of MySQL
-        const db = await Database.load("sqlite:tauri.db");
-
-        // Create the contracts table if it doesn't exist
-        await db.execute(createContractTable);
-
-        console.log("Database and table initialized successfully.");
-      } catch (error) {
-        console.error("Failed to initialize database:", error);
-        errorToast("Failed to initialize database.");
-      }
-    };
-
-    initializeDatabase();
-  }, []);
 
   const handleData = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -103,7 +82,7 @@ const CreateContracts: React.FC = () => {
       errorToast("Please fill in all contract fields.");
       return;
     }
-    //validate year
+
     if (data.year.length !== 4 || !/^\d+$/.test(data.year)) {
       errorToast("Invalid year. Please enter a 4-digit year.");
       return;
@@ -111,47 +90,40 @@ const CreateContracts: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const db = await Database.load("sqlite:tauri.db");
-
       for (const contract of contracts) {
         // Check if the contract already exists
-        const existingContract = await db.select<Contract[]>(
-          "SELECT * FROM contracts WHERE contractID = ?",
-          [contract.contractID]
-        );
-        if (existingContract.length > 0) {
+        const existingContract = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contracts WHERE contractID = @p1",
+            params: [contract.contractID]
+          }
+        });
+
+        if ((existingContract as {rows: Contract[]}).rows.length > 0) {
           errorToast(`Contract with ID ${contract.contractID} already exists.`);
           return;
         }
-        await db.execute(
-          `INSERT INTO contracts (
-            batch, year, posting, preBid, bidding, contractID, projectName, status,
-            contractAmount, contractor, bidEvalStart, bidEvalEnd, postQualStart,
-            postQualEnd, reso, noa, ntp, ntpRecieve, contractDate, lastUpdated
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            data.batch,
-            data.year,
-            data.posting,
-            data.preBid,
-            data.bidding,
-            contract.contractID,
-            contract.projectName,
-            "posted",
-            contract.contractAmount || null,
-            contract.contractor || null,
-            contract.bidEvalStart || null,
-            contract.bidEvalEnd || null,
-            contract.postQualStart || null,
-            contract.postQualEnd || null,
-            contract.reso || null,
-            contract.noa || null,
-            contract.ntp || null,
-            contract.ntpRecieve || null,
-            contract.contractDate || null,
-            new Date().toISOString(),
-          ]
-        );
+
+        // Insert the new contract
+        await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: `INSERT INTO contracts (
+              batch, year, posting, preBid, bidding, contractID, projectName, status
+            ) VALUES (
+              @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8
+            )`,
+            params: [
+              data.batch,
+              data.year,
+              data.posting,
+              data.preBid,
+              data.bidding,
+              contract.contractID,
+              contract.projectName,
+              "posted"
+            ]
+          }
+        });
       }
 
       setData({

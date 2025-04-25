@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { ToastContainer } from "react-toastify";
-import Database from "@tauri-apps/plugin-sql";
 import { errorToast, successToast } from "../../../../config/toast";
+import { invoke } from '@tauri-apps/api/core';
 
 interface UpdateFormData {
   bidEvalStart: string;
@@ -35,12 +35,13 @@ const UpdateMultipleContract: React.FC = () => {
   // Add this new function after the component state declarations
   const validateContractID = async (contractID: string): Promise<boolean> => {
     try {
-      const db = await Database.load("sqlite:tauri.db");
-      const result = await db.select<{ count: number }[]>(
-        "SELECT COUNT(*) as count FROM contracts WHERE contractID = ?",
-        [contractID.trim()]
-      );
-      return result[0].count > 0;
+      const result = await invoke('execute_mssql_query', {
+        queryRequest: {
+          query: "SELECT COUNT(*) as count FROM contracts WHERE contractID = @p1",
+          params: [contractID.trim()]
+        }
+      });
+      return (result as {rows: {count: number}[]}).rows[0].count > 0;
     } catch (error) {
       console.error("Error validating contract ID:", error);
       return false;
@@ -94,17 +95,17 @@ const UpdateMultipleContract: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const db = await Database.load("sqlite:tauri.db");
-      let updateCount = 0;
 
       // Build the dynamic UPDATE query based on non-empty fields
       const updateFields: string[] = [];
       const updateValues: string[] = [];
+      let paramIndex = 1;
 
       Object.entries(formData).forEach(([key, value]) => {
         if (value.trim() !== "") {
-          updateFields.push(`${key} = ?`);
+          updateFields.push(`${key} = @p${paramIndex}`);
           updateValues.push(value);
+          paramIndex++;
         }
       });
 
@@ -123,38 +124,39 @@ const UpdateMultipleContract: React.FC = () => {
       }
 
       if (status) {
-        updateFields.push("status = ?");
+        updateFields.push(`status = @p${paramIndex}`);
         updateValues.push(status);
+        paramIndex++;
       }
 
       // Add lastUpdated field
-      updateFields.push("lastUpdated = ?");
+      updateFields.push(`lastUpdated = @p${paramIndex}`);
       updateValues.push(new Date().toISOString());
-
-      const updateQuery = `
-        UPDATE contracts 
-        SET ${updateFields.join(", ")}
-        WHERE contractID = ?
-      `;
+      paramIndex++;
 
       for (const contractID of contractIDs) {
         try {
-          const result = await db.execute(updateQuery, [
-            ...updateValues,
-            contractID,
-          ]);
-          if (result.rowsAffected > 0) {
-            updateCount++;
+          const result = await invoke('execute_mssql_query', {
+            queryRequest: {
+              query: `
+                UPDATE contracts 
+                SET ${updateFields.join(", ")}
+                WHERE contractID = @p${paramIndex}
+              `,
+              params: [...updateValues, contractID]
+            }
+          });
+          
+          if ((result as {rowsAffected: number}).rowsAffected > 0) {
           }
         } catch (error) {
           console.error(`Error updating contract ${contractID}:`, error);
         }
       }
 
-      successToast(`Successfully updated ${updateCount} contracts`);
+      successToast(`Successfully updated contracts`);
 
-      // Reset form if all updates were successful
-      if (updateCount === contractIDs.length) {
+      // Reset form if all updates were successfu
         setFormData({
           bidEvalStart: "",
           bidEvalEnd: "",
@@ -167,7 +169,6 @@ const UpdateMultipleContract: React.FC = () => {
           contractDate: "",
         });
         setContractIDs([]);
-      }
     } catch (error) {
       console.error("Error updating contracts:", error);
       errorToast("Failed to update contracts");

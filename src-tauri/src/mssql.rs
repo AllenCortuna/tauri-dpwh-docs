@@ -44,21 +44,18 @@ pub async fn execute_mssql_query(query_request: QueryRequest) -> Result<QueryRes
     let result = if let Some(params) = query_request.params {
         // Handle parameterized query
         let mut query = Query::new(&query_text);
-        // println!("Query parameters: {:?}", params); //debug
-        // Add parameters
+        println!("Query parameters: {:?}", params); //debug
+                                                    // Add parameters
         for param in params {
             query.bind(param);
         }
         // println!("Executing query: {:?}", query_text); //debug
 
         // Execute query with parameters
-        let stream = query
-            .query(&mut client)
-            .await
-            .map_err(|e| {
-                println!("Query execution error: {}", e);
-                format!("Query execution error: {}", e)
-            })?;
+        let stream = query.query(&mut client).await.map_err(|e| {
+            println!("Query execution error: {}", e);
+            format!("Query execution error: {}", e)
+        })?;
 
         // Process the results
         if is_select {
@@ -103,14 +100,32 @@ pub async fn execute_mssql_query(query_request: QueryRequest) -> Result<QueryRes
         let mut row_map = HashMap::new();
         for (i, column) in row.columns().iter().enumerate() {
             let column_name = column.name().to_string();
-            let value = match row.try_get::<&str, _>(i) {
-                Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
-                _ => serde_json::Value::Null,
+            let value = match column.column_type() {
+                tiberius::ColumnType::Int4 => {
+                    match row.try_get::<i32, _>(i) {
+                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
+                        _ => serde_json::Value::Null,
+                    }
+                },
+                tiberius::ColumnType::Int8 => {
+                    match row.try_get::<i64, _>(i) {
+                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
+                        _ => serde_json::Value::Null,
+                    }
+                },
+                _ => {
+                    // Default string handling for other types
+                    match row.try_get::<&str, _>(i) {
+                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
+                        _ => serde_json::Value::Null,
+                    }
+                }
             };
             row_map.insert(column_name, value);
         }
         result_rows.push(row_map);
     }
 
+    println!("Query result: {:?}", result_rows); //debug
     Ok(QueryResult { rows: result_rows })
 }

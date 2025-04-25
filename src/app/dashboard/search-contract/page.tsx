@@ -103,7 +103,7 @@ const AdvancedSearch: React.FC = () => {
       console.error(error);
     }
   };
-  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
 
   // Update handleReset
   const handleReset = () => {

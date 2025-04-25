@@ -5,7 +5,7 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
 import { formatDate } from "../../../config/convertToDate";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 
 interface FormData {
   contractID: string;
@@ -60,17 +60,23 @@ const CreateBidReceipt = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        
         // Fetch contractors
-        const contractorsResult = await db.select<Contractor[]>("SELECT * FROM contractors");
-        setContractors(contractorsResult);
+        const contractorsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT * FROM contractors",
+            params: []
+          }
+        });
+        setContractors((contractorsResult as {rows: Contractor[]}).rows);
         
         // Fetch contracts
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
-        setContracts(contractsResult);
+        const contractsResult = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            params: []
+          }
+        });
+        setContracts((contractsResult as {rows: Contract[]}).rows);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -277,7 +283,7 @@ const CreateBidReceipt = () => {
             >
               {filteredContracts.map((contract) => (
                 <div
-                  key={contract.id}
+                  key={contract.contractID}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                   onClick={() => handleContractSelect(contract)}
                 >
