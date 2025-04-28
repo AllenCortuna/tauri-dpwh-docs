@@ -321,7 +321,7 @@ const AdvancedSearch: React.FC = () => {
                 <tr className="text-xs">
                   <th className="p-3 text-left">Contract ID</th>
                   <th className="p-3 text-left">Project Name</th>
-                  <th className="p-3 text-left">Contractor</th>
+                  <th className="p-3 text-left">Batch</th>
                   <th className="p-3 text-left">Bidding Date</th>
                   <th className="p-3 text-left">Award Date</th>
                   <th className="p-3 text-left">Status</th>
@@ -336,7 +336,7 @@ const AdvancedSearch: React.FC = () => {
                   >
                     <td className="p-3">{contract.contractID}</td>
                     <td className="p-3">{contract.projectName}</td>
-                    <td className="p-3">{contract.contractor}</td>
+                    <td className="p-3">{contract.batch}</td>
                     <td className="p-3">{contract.bidding}</td>
                     <td className="p-3">{contract.noa}</td>
                     <td className="p-3">{contract.status}</td>

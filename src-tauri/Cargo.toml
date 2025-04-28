@@ -32,3 +32,4 @@ tauri-plugin-localhost = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-sql = { version = "2", features = ["mysql", "sqlite"] }
 tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"

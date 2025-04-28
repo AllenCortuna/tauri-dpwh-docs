@@ -101,22 +101,24 @@ pub async fn execute_mssql_query(query_request: QueryRequest) -> Result<QueryRes
         for (i, column) in row.columns().iter().enumerate() {
             let column_name = column.name().to_string();
             let value = match column.column_type() {
-                tiberius::ColumnType::Int4 => {
-                    match row.try_get::<i32, _>(i) {
-                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
-                        _ => serde_json::Value::Null,
+                tiberius::ColumnType::Int4 => match row.try_get::<i32, _>(i) {
+                    Ok(Some(value)) => {
+                        serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
                     }
+                    _ => serde_json::Value::Null,
                 },
-                tiberius::ColumnType::Int8 => {
-                    match row.try_get::<i64, _>(i) {
-                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
-                        _ => serde_json::Value::Null,
+                tiberius::ColumnType::Int8 => match row.try_get::<i64, _>(i) {
+                    Ok(Some(value)) => {
+                        serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
                     }
+                    _ => serde_json::Value::Null,
                 },
                 _ => {
                     // Default string handling for other types
                     match row.try_get::<&str, _>(i) {
-                        Ok(Some(value)) => serde_json::to_value(value).unwrap_or(serde_json::Value::Null),
+                        Ok(Some(value)) => {
+                            serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+                        }
                         _ => serde_json::Value::Null,
                     }
                 }

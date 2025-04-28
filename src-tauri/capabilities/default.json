@@ -24,6 +24,7 @@
     "sql:allow-execute",
     "dialog:default",
     "log:default",
-    "dialog:default"
+    "dialog:default",
+    "notification:default"
   ]
 }

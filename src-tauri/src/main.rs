@@ -7,6 +7,7 @@ use mssql::execute_mssql_query;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         // Add this line to register the command
         .invoke_handler(tauri::generate_handler![execute_mssql_query])

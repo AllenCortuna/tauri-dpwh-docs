@@ -42,7 +42,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
           </div>
         </h2>
 
-        <div className="grid grid-cols-1 gap-4 border p-6 overflow-scroll max-h-[70vh]">
+        <div className="grid grid-cols-1 gap-4 border p-6 overflow-scroll max-h-[70vh] overflow-x-hidden">
           <div className="mb-20">
             <div className="block text-wrap">
               <p className="mt-1 w-full mb-20 text-gray-500">{contract.projectName}</p>
