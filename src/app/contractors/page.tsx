@@ -6,15 +6,16 @@ import { FaUsers, FaUserTie, FaBuilding } from "react-icons/fa";
 import { BsPersonVcard } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import ContractorNav from "../components/ContractorNav";
-import { invoke } from '@tauri-apps/api/core';
-import { 
-  Chart as ChartJS, 
-  ArcElement, 
-  Tooltip, 
-  Legend, 
-  ChartOptions, 
-} from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartOptions,
+} from "chart.js";
+import { Doughnut } from "react-chartjs-2";
+import { format } from "date-fns";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -70,58 +71,68 @@ const ContractorsDashboard: React.FC = () => {
       setIsLoading(true);
 
       // Get total contractors count
-      const totalContractorsResult = await invoke('execute_mssql_query', {
+      const totalContractorsResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT * FROM contractors"
-        }
+          query: "SELECT * FROM contractors",
+        },
       });
 
       // Get contractors with email count
-      const withEmailResult = await invoke('execute_mssql_query', {
+      const withEmailResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT * FROM contractors WHERE email IS NOT NULL AND email != ''"
-        }
+          query:
+            "SELECT * FROM contractors WHERE email IS NOT NULL AND email != ''",
+        },
       });
 
       // Get contractors with TIN count
-      const withTINResult = await invoke('execute_mssql_query', {
+      const withTINResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT * FROM contractors WHERE tin IS NOT NULL AND tin != ''"
-        }
+          query:
+            "SELECT * FROM contractors WHERE tin IS NOT NULL AND tin != ''",
+        },
       });
 
       // Get contractors with AMO count
-      const withAMOResult = await invoke('execute_mssql_query', {
+      const withAMOResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT * FROM contractors WHERE amo IS NOT NULL AND amo != ''"
-        }
+          query:
+            "SELECT * FROM contractors WHERE amo IS NOT NULL AND amo != ''",
+        },
       });
 
       // Get contractors with designation count
-      const withDesignationResult = await invoke('execute_mssql_query', {
+      const withDesignationResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT * FROM contractors WHERE designation IS NOT NULL AND designation != ''"
-        }
+          query:
+            "SELECT * FROM contractors WHERE designation IS NOT NULL AND designation != ''",
+        },
       });
 
       // Get recent contractors
-      const recentContractorsResult = await invoke('execute_mssql_query', {
+      const recentContractorsResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT TOP 5 * FROM contractors ORDER BY lastUpdated DESC"
-        }
+          query: "SELECT TOP 5 id, contractorName, email, amo, designation, tin, address, CONVERT(NVARCHAR, lastUpdated, 120) as lastUpdated FROM contractors ORDER BY lastUpdated DESC",
+        },
       });
-      console.log('recentContractorsResult', recentContractorsResult)
-      
+      console.log("recentContractorsResult", recentContractorsResult);
 
       setStats({
-        totalContractors: (totalContractorsResult as {rows: Contractor[]}).rows.length || 0,
-        totalWithEmail: (withEmailResult as {rows: Contractor[]}).rows.length || 0,
-        totalWithTIN: (withTINResult as {rows: Contractor[]}).rows.length || 0,
-        totalWithAMO: (withAMOResult as {rows: Contractor[]}).rows.length || 0,
-        totalWithDesignation: (withDesignationResult as {rows: Contractor[]}).rows.length || 0,
+        totalContractors:
+          (totalContractorsResult as { rows: Contractor[] }).rows.length || 0,
+        totalWithEmail:
+          (withEmailResult as { rows: Contractor[] }).rows.length || 0,
+        totalWithTIN:
+          (withTINResult as { rows: Contractor[] }).rows.length || 0,
+        totalWithAMO:
+          (withAMOResult as { rows: Contractor[] }).rows.length || 0,
+        totalWithDesignation:
+          (withDesignationResult as { rows: Contractor[] }).rows.length || 0,
       });
 
-      setRecentContractors((recentContractorsResult as {rows: Contractor[]}).rows || 0);
+      setRecentContractors(
+        (recentContractorsResult as { rows: Contractor[] }).rows || 0
+      );
     } catch (error) {
       console.error("Error fetching contractor stats:", error);
       toast.error("Failed to fetch contractor statistics");
@@ -134,12 +145,12 @@ const ContractorsDashboard: React.FC = () => {
   const prepareChartData = (withValue: number, total: number): ChartData => {
     const withoutValue = total - withValue;
     return {
-      labels: ['With', 'Without'],
+      labels: ["With", "Without"],
       datasets: [
         {
           data: [withValue, withoutValue],
-          backgroundColor: ['#10b981', '#f3f4f6'],
-          borderColor: ['#10b981', '#e5e7eb'],
+          backgroundColor: ["#10b981", "#f3f4f6"],
+          borderColor: ["#10b981", "#e5e7eb"],
           borderWidth: 1,
         },
       ],
@@ -147,10 +158,10 @@ const ContractorsDashboard: React.FC = () => {
   };
 
   // Chart options with proper typing
-  const chartOptions: ChartOptions<'doughnut'> = {
+  const chartOptions: ChartOptions<"doughnut"> = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '70%',
+    cutout: "70%",
     plugins: {
       legend: {
         display: false,
@@ -167,18 +178,18 @@ const ContractorsDashboard: React.FC = () => {
   };
 
   // Stat card component to reduce repetition
-  const StatCard = ({ 
-    title, 
-    value, 
-    total, 
-    color, 
-    icon: Icon 
-  }: { 
-    title: string; 
-    value: number; 
-    total: number; 
-    color: string; 
-    icon: React.ElementType 
+  const StatCard = ({
+    title,
+    value,
+    total,
+    color,
+    icon: Icon,
+  }: {
+    title: string;
+    value: number;
+    total: number;
+    color: string;
+    icon: React.ElementType;
   }) => (
     <div className={`bg-white rounded-lg p-6 border-l-4 border-${color}-600`}>
       <div className="flex items-center justify-between">
@@ -189,9 +200,9 @@ const ContractorsDashboard: React.FC = () => {
             {title !== "Total Contractors" && (
               <>
                 <div className="h-10 w-10">
-                  <Doughnut 
-                    data={prepareChartData(value, total)} 
-                    options={chartOptions} 
+                  <Doughnut
+                    data={prepareChartData(value, total)}
+                    options={chartOptions}
                   />
                 </div>
                 <p className="text-sm text-gray-500">
@@ -211,7 +222,9 @@ const ContractorsDashboard: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div className="flex justify-between items-center mb-8 w-full">
           <ContractorNav />
-          <h1 className="text-2xl font-bold text-gray-700">Contractors Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-700">
+            Contractors Dashboard
+          </h1>
         </div>
       </div>
 
@@ -222,40 +235,40 @@ const ContractorsDashboard: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <StatCard 
-              title="Total Contractors" 
-              value={stats.totalContractors} 
-              total={stats.totalContractors} 
-              color="indigo" 
-              icon={FaUsers} 
+            <StatCard
+              title="Total Contractors"
+              value={stats.totalContractors}
+              total={stats.totalContractors}
+              color="indigo"
+              icon={FaUsers}
             />
-            <StatCard 
-              title="With Email" 
-              value={stats.totalWithEmail} 
-              total={stats.totalContractors} 
-              color="emerald" 
-              icon={MdEmail} 
+            <StatCard
+              title="With Email"
+              value={stats.totalWithEmail}
+              total={stats.totalContractors}
+              color="emerald"
+              icon={MdEmail}
             />
-            <StatCard 
-              title="With TIN" 
-              value={stats.totalWithTIN} 
-              total={stats.totalContractors} 
-              color="amber" 
-              icon={BsPersonVcard} 
+            <StatCard
+              title="With TIN"
+              value={stats.totalWithTIN}
+              total={stats.totalContractors}
+              color="amber"
+              icon={BsPersonVcard}
             />
-            <StatCard 
-              title="With AMO" 
-              value={stats.totalWithAMO} 
-              total={stats.totalContractors} 
-              color="fuchsia" 
-              icon={FaUserTie} 
+            <StatCard
+              title="With AMO"
+              value={stats.totalWithAMO}
+              total={stats.totalContractors}
+              color="fuchsia"
+              icon={FaUserTie}
             />
-            <StatCard 
-              title="With Designation" 
-              value={stats.totalWithDesignation} 
-              total={stats.totalContractors} 
-              color="rose" 
-              icon={FaBuilding} 
+            <StatCard
+              title="With Designation"
+              value={stats.totalWithDesignation}
+              total={stats.totalContractors}
+              color="rose"
+              icon={FaBuilding}
             />
           </div>
 
@@ -287,7 +300,7 @@ const ContractorsDashboard: React.FC = () => {
                         {contractor.amo}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(contractor.lastUpdated).toLocaleDateString()}
+                        {format(contractor.lastUpdated, "MMM d, yyyy")}
                       </td>
                     </tr>
                   ))}

@@ -35,7 +35,7 @@ const SearchMailings: React.FC = () => {
   const handleSearch = async () => {
     try {
       // Build the SQL query based on the search field and term
-      const query = `SELECT * FROM contractors WHERE ${searchField} LIKE @p1`;
+      const query = `SELECT id, contractorName, email, amo, designation, tin, address, CONVERT(NVARCHAR, lastUpdated, 120) as lastUpdated FROM contractors WHERE ${searchField} LIKE @p1`;
       const searchPattern = `%${searchTerm}%`;
 
       // Execute the query using invoke
@@ -69,8 +69,8 @@ const SearchMailings: React.FC = () => {
               amo = @p3, 
               tin = @p4, 
               address = @p5, 
-              lastUpdated = @p6
-            WHERE contractorName = @p7
+              lastUpdated = GETDATE()
+            WHERE contractorName = @p6
           `,
           params: [
             selectedMailing.contractorName,
@@ -78,7 +78,6 @@ const SearchMailings: React.FC = () => {
             selectedMailing.amo,
             selectedMailing.tin,
             selectedMailing.address,
-            new Date().toISOString(),
             selectedMailingName // Use selectedMailingName as the unique identifier
           ],
         },
