@@ -136,8 +136,8 @@ export default function Home() {
     },
     {
       icon: <FaDatabase className="w-6 h-6" />,
-      title: "Database",
-      subtitle: "Manage SQL queries and backup",
+      title: "Create Contracts",
+      subtitle: "Create contracts information",
       href: "/sqlite",
     }
   ];
@@ -145,7 +145,7 @@ export default function Home() {
   return (
     <div className="h-full mdmt-20 p-8">
       <div className="w-full mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {menuItems.map((item, index) => (
             <Link href={item.href} key={index}>
               <div className="group bg-gray-50 rounded-xl p-4 border-2 border-gray-50 hover:border-orange-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">

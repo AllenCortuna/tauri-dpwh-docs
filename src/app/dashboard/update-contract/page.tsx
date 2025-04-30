@@ -126,6 +126,11 @@ const SearchContracts: React.FC = () => {
   // Handle update contract
   const handleUpdateContract = async () => {
     try {
+      //validate editFormData.year to be a valid year
+      if (editFormData?.year && (editFormData?.year.length !== 4 || isNaN(Number(editFormData?.year)))) {
+        toast.error("Invalid year");
+        return;
+      }
       // Determine status based on noa and ntp
       let status = "posted";
       if (editFormData?.noa) {

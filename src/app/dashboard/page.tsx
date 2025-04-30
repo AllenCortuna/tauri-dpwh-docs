@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
         // Get total contracts
         const totalContractsResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: "SELECT * FROM contracts"
+            query: `SELECT * FROM contracts WHERE year = '${currentYear}'`
           }
         });
         console.log('totalContractsResponse', totalContractsResponse)
@@ -171,10 +171,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 md:gap-x-20 gap-x-10">
         {/* Replaced with NavLinks component */}
         <NavLinks />
-        <h1 className="text-2xl font-bold text-gray-700">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-700"> {currentYear} Dashboard</h1>
         <div className="flex items-center">
           <label htmlFor="year" className="mr-2 text-gray-700">
             Year:
@@ -219,7 +219,7 @@ const Dashboard: React.FC = () => {
 
             {/* Current Year Stats */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 md:col-span-2 lg:col-span-1">
-              <h2 className="text-gray-500 text-sm mb-4">
+              <h2 className="text-gray-500 font-semibold text-sm mb-4">
                 {currentYear} Contract Status
               </h2>
               <div className="space-y-4">

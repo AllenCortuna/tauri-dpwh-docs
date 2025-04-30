@@ -53,7 +53,9 @@ const EditModal: React.FC<EditModalProps> = ({
   onSave,
 }) => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
-  const [filteredContractors, setFilteredContractors] = useState<Contractor[]>([]);
+  const [filteredContractors, setFilteredContractors] = useState<Contractor[]>(
+    []
+  );
   const [showContractorDropdown, setShowContractorDropdown] = useState(false);
   const contractorDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -61,11 +63,14 @@ const EditModal: React.FC<EditModalProps> = ({
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const result: { rows: Contractor[]} = await invoke("execute_mssql_query", {
-          queryRequest: {
-            query: "SELECT id,* FROM contractors"
+        const result: { rows: Contractor[] } = await invoke(
+          "execute_mssql_query",
+          {
+            queryRequest: {
+              query: "SELECT id,* FROM contractors",
+            },
           }
-        });
+        );
         setContractors(result.rows);
       } catch (error) {
         console.error("Error fetching contractors:", error);
@@ -78,7 +83,10 @@ const EditModal: React.FC<EditModalProps> = ({
   // Handle click outside contractor dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (contractorDropdownRef.current && !contractorDropdownRef.current.contains(event.target as Node)) {
+      if (
+        contractorDropdownRef.current &&
+        !contractorDropdownRef.current.contains(event.target as Node)
+      ) {
         setShowContractorDropdown(false);
       }
     };
@@ -357,6 +365,31 @@ const EditModal: React.FC<EditModalProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+            <div className="block"></div>
+            <div className="block">
+              <span className="font-medium text-gray-700">Year</span>
+              <input
+                type="text"
+                name="year"
+                value={editFormData.year || ""}
+                onChange={(e) => {
+                  // Only allow 4 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  onFormChange({
+                    ...e,
+                    target: {
+                      ...e.target,
+                      value,
+                      name: 'year'
+                    }
+                  });
+                }}
+                pattern="\d{4}"
+                maxLength={4}
+                placeholder="YYYY"
+                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+              />
             </div>
           </div>
 
