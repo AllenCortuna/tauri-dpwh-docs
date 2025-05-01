@@ -25,6 +25,7 @@ interface DashboardStats {
   totalAwardedCurrentYear: number;
   totalPostedCurrentYear: number;
   totalProceedCurrentYear: number;
+  totalCancelledCurrentYear: number;
 }
 
 const Dashboard: React.FC = () => {
@@ -34,6 +35,7 @@ const Dashboard: React.FC = () => {
     totalAwardedCurrentYear: 0,
     totalPostedCurrentYear: 0,
     totalProceedCurrentYear: 0,
+    totalCancelledCurrentYear: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentYear, setCurrentYear] = useState<string>(
@@ -42,7 +44,8 @@ const Dashboard: React.FC = () => {
   const [postedContracts, setPostedContracts] = useState<Contract[]>([]);
   const [awardedContracts, setAwardedContracts] = useState<Contract[]>([]);
   const [proceedContracts, setProceedContracts] = useState<Contract[]>([]);
-  const [activeTab, setActiveTab] = useState<"posted" | "awarded" | "proceed">(
+  const [cancelledContracts, setCancelledContracts] = useState<Contract[]>([]);
+  const [activeTab, setActiveTab] = useState<"posted" | "awarded" | "proceed" | "cancelled">(
     "posted"
   );
 
@@ -87,6 +90,12 @@ const Dashboard: React.FC = () => {
           }
         });
 
+        const cancelledResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT * FROM contracts WHERE status = 'cancelled' AND year = '${currentYear}'`
+          }
+        });
+
         // Fetch contract lists
         const postedListResponse = await invoke("execute_mssql_query", {
           queryRequest: {
@@ -115,12 +124,22 @@ const Dashboard: React.FC = () => {
           }
         });
 
+        const cancelledListResponse = await invoke("execute_mssql_query", {
+          queryRequest: {
+            query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
+                 FROM contracts 
+                 WHERE status = 'cancelled' AND year = '${currentYear}' 
+                 ORDER BY ntp DESC`
+          }
+        });
+
         setStats({
           totalContracts: (totalContractsResponse as { rows: Contract[] }).rows.length || 0,
           totalContractors: (totalContractorsResponse as { rows: { count: Contractor }[] }).rows.length || 0,
           totalAwardedCurrentYear: (awardedResponse as { rows: Contract[] }).rows.length || 0,
           totalPostedCurrentYear: (postedResponse as { rows: Contract[] }).rows.length || 0,
           totalProceedCurrentYear: (proceedResponse as { rows: Contract[] }).rows.length || 0,
+          totalCancelledCurrentYear: (cancelledResponse as { rows: Contract[] }).rows.length || 0,
         });
 
         // Fix the duplicate key issue by ensuring each contract has a unique key
@@ -139,9 +158,12 @@ const Dashboard: React.FC = () => {
           ...contract,
           id: contract.id || index + 3000 // Use index as fallback ID if contract.id is null
         })));
-        // Remove these duplicate setState calls as they're already handled above
-        setAwardedContracts((awardedListResponse as { rows: Contract[] }).rows || []);
-        setProceedContracts((proceedListResponse as { rows: Contract[] }).rows || []);
+
+        setCancelledContracts(((cancelledListResponse as { rows: Contract[] }).rows || []).map((contract, index) => ({
+          ...contract,
+          id: contract.id || index + 3000 // Use index as fallback ID if contract.id is null
+        })));
+
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -222,33 +244,41 @@ const Dashboard: React.FC = () => {
               <h2 className="text-gray-500 font-semibold text-sm mb-4">
                 {currentYear} Contract Status
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-sm">Posted</span>
-                  <span className="font-extrabold text-gray-600">
+                  <span className="text-gray-600 text-xs">Posted</span>
+                  <span className="font-extrabold text-gray-600 text-sm">
                     {stats.totalPostedCurrentYear}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-sm">Awarded</span>
-                  <span className="font-extrabold text-gray-600">
+                  <span className="text-gray-600 text-xs">Awarded</span>
+                  <span className="font-extrabold text-gray-600 text-sm">
                     {stats.totalAwardedCurrentYear}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-sm">Proceed</span>
-                  <span className="font-extrabold text-gray-600">
+                  <span className="text-gray-600 text-xs">Proceed</span>
+                  <span className="font-extrabold text-gray-600 text-sm">
                     {stats.totalProceedCurrentYear}
                   </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-xs">Cancelled/Rebid</span>
+                  <span className="font-extrabold text-gray-600 text-sm">
+                    {stats.totalCancelledCurrentYear}
+                  </span>
+                </div>
                 <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
-                  <span className="font-medium text-sm text-gray-600">
+                  <span className="font-medium text-xs text-gray-600">
                     Total for {currentYear}
                   </span>
                   <span className="font-bold text-gray-600">
                     {stats.totalPostedCurrentYear +
                       stats.totalAwardedCurrentYear +
-                      stats.totalProceedCurrentYear}
+                      stats.totalProceedCurrentYear +
+                      stats.totalCancelledCurrentYear 
+                      }
                   </span>
                 </div>
               </div>
@@ -288,13 +318,23 @@ const Dashboard: React.FC = () => {
               >
                 With NTP
               </button>
+              <button
+                className={`py-2 px-4 ${
+                  activeTab === "cancelled"
+                    ? "text-orange-600 border-b-2 border-orange-600 font-bold"
+                    : "text-xs text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("cancelled")}
+              >
+                Cancelled
+              </button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="bg-white divide-y divide-gray-200 text-xs">
-                  {activeTab === "posted" && postedContracts.length > 0 ? (
-                    postedContracts.map((contract) => (
+                  {(() => {
+                    const renderContract = (contract: Contract) => (
                       <tr key={contract.id}>
                         <td className="px-6 py-4 text-primary font-bold">
                           {contract.contractID}
@@ -302,49 +342,46 @@ const Dashboard: React.FC = () => {
                         <td className="px-6 py-4 text-gray-500">
                           {contract.projectName}
                         </td>
+                        {activeTab === "awarded" && (
+                          <>
+                            <td className="px-6 py-4 text-gray-500">
+                              {contract.contractor || ""}
+                            </td>
+                            <td className="px-6 py-4 w-36 text-gray-500">
+                              {contract.noa || ""}
+                            </td>
+                          </>
+                        )}
+                        {activeTab === "proceed" && (
+                          <td className="px-6 py-4 w-36 text-gray-500">
+                            {contract.ntp || ""}
+                          </td>
+                        )}
                       </tr>
-                    ))
-                  ) : activeTab === "awarded" && awardedContracts.length > 0 ? (
-                    awardedContracts.map((contract) => (
-                      <tr key={contract.id}>
-                        <td className="px-6 py-4 text-primary font-bold">
-                          {contract.contractID}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {contract.projectName}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {contract.contractor || ""}
-                        </td>
-                        <td className="px-6 py-4 w-36 text-gray-500">
-                          {contract.noa || ""}
-                        </td>
-                      </tr>
-                    ))
-                  ) : activeTab === "proceed" && proceedContracts.length > 0 ? (
-                    proceedContracts.map((contract) => (
-                      <tr key={contract.id}>
-                        <td className="px-6 py-4 text-primary font-bold">
-                          {contract.contractID}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {contract.projectName}
-                        </td>
-                        <td className="px-6 py-4 w-36 text-gray-500">
-                          {contract.ntp || ""}
+                    );
+
+                    const contractMap = {
+                      posted: postedContracts,
+                      awarded: awardedContracts,
+                      proceed: proceedContracts,
+                      cancelled: cancelledContracts
+                    };
+
+                    const contracts = contractMap[activeTab];
+
+                    return contracts.length > 0 ? (
+                      contracts.map(renderContract)
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-6 py-4 text-center text-gray-500"
+                        >
+                          No contracts found for this status.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-6 py-4 text-center text-gray-500"
-                      >
-                        No contracts found for this status.
-                      </td>
-                    </tr>
-                  )}
+                    );
+                  })()}
                 </tbody>
               </table>
             </div>

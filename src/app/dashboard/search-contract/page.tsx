@@ -6,6 +6,7 @@ import ReactPaginate from "react-paginate";
 import ViewModal from "./ViewModal";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { invoke } from '@tauri-apps/api/core';
+import { format } from "date-fns";
 
 interface Contract {
   id: number;
@@ -319,35 +320,27 @@ const AdvancedSearch: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr className="text-xs">
-                  <th className="p-3 text-left">Contract ID</th>
+                  <th className="p-3 text-left">Contract</th>
                   <th className="p-3 text-left">Project Name</th>
                   <th className="p-3 text-left">Batch</th>
-                  <th className="p-3 text-left">Bidding Date</th>
-                  <th className="p-3 text-left">Award Date</th>
+                  <th className="p-3 text-left w-40">Bidding Date</th>
+                  <th className="p-3 text-left w-40">Award Date</th>
                   <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-xs">
                 {currentContracts.map((contract) => (
                   <tr
                     key={contract.contractID}
-                    className="border-t hover:bg-gray-50 text-zinc-600"
+                    className="border-t hover:bg-gray-50 hover:cursor-pointer text-zinc-600"
+                    onClick={() => handleView(contract)}
                   >
-                    <td className="p-3">{contract.contractID}</td>
+                    <td className="p-3 text-neutral font-bold bg-slate-100 border-y border-gray-200">{contract.contractID}</td>
                     <td className="p-3">{contract.projectName}</td>
                     <td className="p-3">{contract.batch}</td>
-                    <td className="p-3">{contract.bidding}</td>
-                    <td className="p-3">{contract.noa}</td>
-                    <td className="p-3">{contract.status}</td>
-                    <td className="p-3">
-                      <button
-                        onClick={() => handleView(contract)}
-                        className="btn btn-xs btn-outline rounded-none"
-                      >
-                        details
-                      </button>
-                    </td>
+                    <td className="p-3">{format(contract.bidding, "MMM dd, yyyy")}</td>
+                    <td className="p-3">{contract.noa && format(contract.noa, "MMM dd, yyyy")}</td>
+                    <td className="p-3">{contract.status == "proceed" ? "completed" : contract.status }</td>
                   </tr>
                 ))}
               </tbody>

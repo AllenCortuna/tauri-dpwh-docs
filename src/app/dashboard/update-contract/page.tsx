@@ -6,6 +6,8 @@ import "react-toastify/dist/ReactToastify.css";
 import ReactPaginate from "react-paginate";
 import EditModal from "./EditModal";
 import { invoke } from '@tauri-apps/api/core';
+import { ask } from '@tauri-apps/plugin-dialog';
+import { format } from "date-fns";
 
 interface Contract {
   id: number;
@@ -39,7 +41,7 @@ const SearchContracts: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchType, setSearchType] = useState<
     "batch" | "year" | "contractID" | "bidding" | "projectName" | "contractor"
-  >("batch");
+  >("contractID");
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editFormData, setEditFormData] = useState<Contract | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
@@ -201,6 +203,61 @@ const SearchContracts: React.FC = () => {
     }
   };
 
+  // Handle delete contract
+  const handleDeleteContract = async (contractID: string) => {
+    try {
+      // type contractID to confirm delete using tauri-dialog
+      const confirmed = await ask("This action cannot be reverted. Are you sure?", {
+        title: "Confirm Delete",
+        kind: 'warning',
+      })
+      if (!confirmed) {
+        return;
+      }
+      const query = `DELETE FROM contracts WHERE contractID = @p1`;
+      await invoke("execute_mssql_query", {
+        queryRequest: {
+          query,
+          params: [contractID]
+        }
+      });
+      setIsEditModalOpen(false);
+      setEditFormData(null);
+      toast.success("Contract deleted successfully");
+      fetchContracts();   
+    } catch (error) {
+      toast.error("Failed to delete contract");
+      console.error(error);
+    }
+  }
+
+  //handle update status to cancelled
+  const handleCancel = async (contractID: string) => {
+    try {
+      const confirmed = await ask("Confirm update status to CANCELLED, This action cannot be reverted. Are you sure?", {
+        title: "Confirm",
+        kind: 'warning',
+      })
+      if (!confirmed) {
+        return;
+      }
+      const query = `UPDATE contracts SET status = 'cancelled' WHERE contractID = @p1`;
+      await invoke("execute_mssql_query", {
+        queryRequest: {
+          query,
+          params: [contractID]
+        }
+      });
+      setIsEditModalOpen(false);
+      setEditFormData(null);
+      toast.success("Contract status updated successfully");
+      fetchContracts();
+    } catch (error) {
+      toast.error("Failed to update contract status");
+      console.error(error);
+    }
+  }
+
   // Pagination logic
   const offset = currentPage * contractsPerPage;
   const currentContracts = contracts.slice(offset, offset + contractsPerPage);
@@ -270,10 +327,10 @@ const SearchContracts: React.FC = () => {
             <tr>
               <th className="p-3 text-left font-semibold text-gray-700">Batch</th>
               <th className="p-3 text-left font-semibold text-gray-700">Year</th>
-              <th className="p-3 text-left font-semibold text-gray-700">Contract ID</th>
+              <th className="p-3 text-left font-semibold text-gray-700">Contract</th>
               <th className="p-3 text-left font-semibold text-gray-700">Project Name</th>
               <th className="p-3 text-left font-semibold text-gray-700">Contractor</th>
-              <th className="p-3 text-left font-semibold text-gray-700">Bidding</th>
+              <th className="p-3 text-left font-semibold text-gray-700 w-40">Bidding</th>
               <th className="p-3 text-left font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
@@ -285,16 +342,16 @@ const SearchContracts: React.FC = () => {
               >
                 <td className="p-3 text-gray-700">{contract.batch}</td>
                 <td className="p-3 text-gray-700">{contract.year}</td>
-                <td className="p-3 text-gray-700">{contract.contractID}</td>
+                <td className="p-3 text-neutral font-bold bg-slate-100 border-y border-gray-400">{contract.contractID}</td>
                 <td className="p-3 text-gray-700">{contract.projectName}</td>
                 <td className="p-3 text-gray-700">{contract.contractor}</td>
-                <td className="p-3 text-gray-700">{contract.bidding}</td>
+                <td className="p-3 text-gray-700">{format(contract.bidding, "MMM dd,yyyy")}</td>
                 <td className="p-3">
                   <button
                     onClick={() => handleEdit(contract)}
-                    className="btn-outline text-warning rounded-none shadow-md btn-xs btn"
+                    className="btn-outline text-gray-500 rounded-none shadow-md btn-xs btn"
                   >
-                    Edit
+                    edit
                   </button>
                 </td>
               </tr>
@@ -329,6 +386,8 @@ const SearchContracts: React.FC = () => {
         editFormData={editFormData}
         onFormChange={handleEditFormChange}
         onSave={handleUpdateContract}
+        onDelete={handleDeleteContract}
+        onCancel={handleCancel}
       />
 
       <ToastContainer />

@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { successToast } from "../../../../config/toast";
 
 interface ViewModalProps {
   isOpen: boolean;
@@ -45,125 +46,156 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
         <div className="grid grid-cols-1 gap-4 border p-6 overflow-scroll max-h-[70vh] overflow-x-hidden">
           <div className="mb-20">
             <div className="block text-wrap">
-              <p className="mt-1 w-full mb-20 text-gray-500">{contract.projectName}</p>
+              <p className="mt-1 w-full mb-20 text-gray-500">
+                <button
+                  data-tip="Copy to clipboard"
+                  className="btn btn-xs mr-2 text-neutral border-none tooltip tooltip-top rounded-none btn-outline "
+                  onClick={() => {
+                    navigator.clipboard.writeText(contract.projectName);
+                    successToast(`${contract.contractID} copied to clipboard`);
+                  }}
+                >
+                  {contract.projectName}
+                </button>
+              </p>
             </div>
 
             {/* Dates Section */}
             <div className="mb-2">
-              <div className="grid mb-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">   
+              <div className="grid mb-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="block">
-                  <span className="text-gray-500">
-                    Posting Date
-                  </span>
-                  <p className="mt-1 w-full text-lg font-bold text-neutral">{format(contract.posting, "MMM dd, yyyy")}</p>
+                  <span className="text-gray-500">Posting Date</span>
+                  <p className="mt-1 w-full text-lg font-bold text-neutral">
+                    {format(contract.posting, "MMM dd, yyyy")}
+                  </p>
                 </div>
 
                 <div className="block">
-                  <span className="text-gray-500">
-                    Pre-Bid Date
-                  </span>
-                  <p className="mt-1 w-full text-lg font-bold text-neutral">{format(contract.preBid, "MMM dd, yyyy")}</p>
+                  <span className="text-gray-500">Pre-Bid Date</span>
+                  <p className="mt-1 w-full text-lg font-bold text-neutral">
+                    {format(contract.preBid, "MMM dd, yyyy")}
+                  </p>
                 </div>
                 <div className="block">
-                  <span className="text-gray-500">
-                    Bidding Date
-                  </span>
-                  <p className="mt-1 w-full text-lg font-bold text-neutral">{format(contract.bidding, "MMM dd, yyyy")}</p>
+                  <span className="text-gray-500">Bidding Date</span>
+                  <p className="mt-1 w-full text-lg font-bold text-neutral">
+                    {format(contract.bidding, "MMM dd, yyyy")}
+                  </p>
                 </div>
               </div>
 
               {/* Bid Evaluation Section */}
               <div className="mb-2">
-                <div className="mb-20 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="block">
-                    <span className="font-medium text-gray-700">
-                      Bid Evaluation Date
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-xs text-gray-600">From:</span>
-                        <p className="mt-1 p-2 w-full">
-                          {contract.bidEvalStart}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-600">To:</span>
-                        <p className="mt-1 p-2 w-full">{contract.bidEvalEnd}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="block">
-                    <span className="font-medium text-gray-700">
-                      Post Qualification Date
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-xs text-gray-600">From:</span>
-                        <p className="mt-1 p-2 w-full">
-                          {contract.postQualStart}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-600">To:</span>
-                        <p className="mt-1 p-2 w-full">
-                          {contract.postQualEnd}
-                        </p>
+                <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {contract.bidEvalStart && contract.bidEvalEnd ? (
+                    <div className="block">
+                      <span className="font-medium text-gray-700">
+                        Bid Evaluation Date
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-xs text-gray-600">From:</span>
+                          <p className="mt-1 p-2 w-full">
+                            {contract.bidEvalStart}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-600">To:</span>
+                          <p className="mt-1 p-2 w-full">
+                            {contract.bidEvalEnd}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
+                  {contract.postQualStart && contract.postQualEnd ? (
+                    <div className="block">
+                      <span className="font-medium text-gray-700">
+                        Post Qualification Date
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-xs text-gray-600">From:</span>
+                          <p className="mt-1 p-2 w-full">
+                            {contract.postQualStart}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-600">To:</span>
+                          <p className="mt-1 p-2 w-full">
+                            {contract.postQualEnd}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Additional Details Section */}
                 <div className="mb-2">
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">
-                    Additional Information
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Resolution
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.reso}</p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Notice of Award
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.noa}</p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Notice to Proceed
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.ntp}</p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        NTP Receive Date
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.ntpRecieve}</p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Contract Date
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.contractDate}</p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Contract Amount
-                      </span>
-                      <p className="mt-1 p-2 w-full">
-                        {contract.contractAmount}
-                      </p>
-                    </div>
-                    <div className="block">
-                      <span className="font-medium text-gray-700">
-                        Contractor
-                      </span>
-                      <p className="mt-1 p-2 w-full">{contract.contractor}</p>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {contract.reso ? (
+                      <div className="block">
+                        <span className="text-gray-500">Resolution</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.reso}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.noa ? (
+                      <div className="block">
+                        <span className="text-gray-500">Notice of Award</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.noa}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.ntp ? (
+                      <div className="block">
+                        <span className="text-gray-500">Notice to Proceed</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.ntp}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.ntpRecieve ? (
+                      <div className="block">
+                        <span className="text-gray-500">NTP Receive Date</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.ntpRecieve}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.contractDate ? (
+                      <div className="block">
+                        <span className="text-gray-500">Contract Date</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.contractDate}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.contractAmount ? (
+                      <div className="block">
+                        <span className="text-gray-500">Contract Amount</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.contractAmount}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {contract.contractor ? (
+                      <div className="block sm:col-span-2 lg:col-span-3">
+                        <span className="text-gray-500">Contractor</span>
+                        <p className="mt-1 w-full text-lg font-bold text-neutral">
+                          {contract.contractor}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>

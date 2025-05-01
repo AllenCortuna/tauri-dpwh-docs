@@ -8,8 +8,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
-        // Add this line to register the command
-        .invoke_handler(tauri::generate_handler![execute_mssql_query])
+        .invoke_handler(tauri::generate_handler![execute_mssql_query])   // Add this line to register the command
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

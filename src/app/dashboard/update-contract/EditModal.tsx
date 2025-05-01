@@ -29,10 +29,12 @@ interface Contract {
 
 interface EditModalProps {
   isOpen: boolean;
+  onDelete: (contractID: string) => void; // Changed from React.ChangeEvent
   onClose: () => void;
   editFormData: Contract | null;
   onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSave: () => void;
+  onCancel: (contractID: string) => void;
 }
 
 interface Contractor {
@@ -51,6 +53,8 @@ const EditModal: React.FC<EditModalProps> = ({
   editFormData,
   onFormChange,
   onSave,
+  onDelete,
+  onCancel,
 }) => {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [filteredContractors, setFilteredContractors] = useState<Contractor[]>(
@@ -134,12 +138,14 @@ const EditModal: React.FC<EditModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex text-xs justify-center items-center">
       <div className="bg-white p-6 md:p-8 rounded-lg w-11/12 max-w-5xl shadow-xl overflow-y-auto max-h-[90vh]">
-        <h2 className="text-xl font-bold mb-10 text-gray-800 flex gap-5">
-          <p>{editFormData.contractID}</p>
-          <div className="border px-4 flex py-0 text-[0.7rem] text-center border-primary text-primary font-bold rounded-md">
-            {editFormData?.status}
-          </div>
-        </h2>
+        <div className="flex justify-between items-start mb-10">
+          <h2 className="text-xl font-bold text-gray-800 flex gap-5">
+            <p>{editFormData.contractID}</p>
+            <div className="border px-4 flex py-0 text-[0.7rem] text-center border-primary text-primary font-bold rounded-md">
+              {editFormData?.status}
+            </div>
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4">
           {/* Basic Information Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -375,14 +381,14 @@ const EditModal: React.FC<EditModalProps> = ({
                 value={editFormData.year || ""}
                 onChange={(e) => {
                   // Only allow 4 digits
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 4);
                   onFormChange({
                     ...e,
                     target: {
                       ...e.target,
                       value,
-                      name: 'year'
-                    }
+                      name: "year",
+                    },
                   });
                 }}
                 pattern="\d{4}"
@@ -394,18 +400,31 @@ const EditModal: React.FC<EditModalProps> = ({
           </div>
 
           {/* Modal Buttons */}
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex justify-end gap-4 mt-10">
+            <button
+              onClick={() => onDelete(editFormData.contractID)}
+              className="btn-outline ml-0 mt-auto text-red-700 btn btn-xs"
+            >
+              delete
+            </button>
+
+            <button
+              onClick={() => onCancel(editFormData.contractID)}
+              className="btn-outline ml-0 mr-auto mt-auto text-gray-700 btn btn-xs"
+            >
+              cancel
+            </button>
             <button
               onClick={onClose}
-              className="btn-outline text-gray-700 rounded-none shadow-md btn btn-sm"
+              className="btn-outline text-gray-700 btn btn-xs my-auto"
             >
-              Cancel
+              exit
             </button>
             <button
               onClick={onSave}
-              className="btn btn-neutral rounded-none shadow-md text-white btn-sm"
+              className="btn btn-neutral text-white btn-sm"
             >
-              Save Changes
+              Save
             </button>
           </div>
         </div>
