@@ -112,7 +112,8 @@ const ContractorsDashboard: React.FC = () => {
       // Get recent contractors
       const recentContractorsResult = await invoke("execute_mssql_query", {
         queryRequest: {
-          query: "SELECT TOP 5 id, contractorName, email, amo, designation, tin, address, CONVERT(NVARCHAR, lastUpdated, 120) as lastUpdated FROM contractors ORDER BY lastUpdated DESC",
+          query:
+            "SELECT TOP 5 id, contractorName, email, amo, designation, tin, address, CONVERT(NVARCHAR, lastUpdated, 120) as lastUpdated FROM contractors ORDER BY lastUpdated DESC",
         },
       });
       console.log("recentContractorsResult", recentContractorsResult);
@@ -131,7 +132,7 @@ const ContractorsDashboard: React.FC = () => {
       });
 
       setRecentContractors(
-        (recentContractorsResult as { rows: Contractor[] }).rows || 0
+        (recentContractorsResult as { rows: Contractor[] }).rows || []
       );
     } catch (error) {
       console.error("Error fetching contractor stats:", error);
@@ -300,7 +301,9 @@ const ContractorsDashboard: React.FC = () => {
                         {contractor.amo}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {format(contractor.lastUpdated, "MMM d, yyyy")}
+                        {contractor.lastUpdated 
+                          ? format(new Date(contractor.lastUpdated), "MMM d, yyyy")
+                          : ""}
                       </td>
                     </tr>
                   ))}

@@ -49,7 +49,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
               <p className="mt-1 w-full mb-20 text-gray-500">
                 <button
                   data-tip="Copy to clipboard"
-                  className="btn btn-xs mr-2 text-neutral border-none tooltip tooltip-top rounded-none btn-outline "
+                  className="btn btn-xs mr-2 text-zinc-500 font-normal text-left border-none tooltip tooltip-top rounded-none btn-outline "
                   onClick={() => {
                     navigator.clipboard.writeText(contract.projectName);
                     successToast(`${contract.contractID} copied to clipboard`);
@@ -96,13 +96,13 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                         <div>
                           <span className="text-xs text-gray-600">From:</span>
                           <p className="mt-1 p-2 w-full">
-                            {contract.bidEvalStart}
+                            {format(contract.bidEvalStart, "MMM dd, yyyy")}
                           </p>
                         </div>
                         <div>
                           <span className="text-xs text-gray-600">To:</span>
                           <p className="mt-1 p-2 w-full">
-                            {contract.bidEvalEnd}
+                            {format(contract.bidEvalEnd, "MMM dd, yyyy")}
                           </p>
                         </div>
                       </div>
@@ -117,13 +117,13 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                         <div>
                           <span className="text-xs text-gray-600">From:</span>
                           <p className="mt-1 p-2 w-full">
-                            {contract.postQualStart}
+                            {format(contract.postQualStart, "MMM dd, yyyy")}
                           </p>
                         </div>
                         <div>
                           <span className="text-xs text-gray-600">To:</span>
                           <p className="mt-1 p-2 w-full">
-                            {contract.postQualEnd}
+                            {format(contract.postQualEnd, "MMM dd, yyyy")}
                           </p>
                         </div>
                       </div>
@@ -138,7 +138,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">Resolution</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.reso}
+                          {format(contract.reso, "MMM dd, yyyy")}
                         </p>
                       </div>
                     ) : null}
@@ -147,7 +147,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">Notice of Award</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.noa}
+                          {format(contract.noa, "MMM dd, yyyy")}
                         </p>
                       </div>
                     ) : null}
@@ -156,7 +156,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">Notice to Proceed</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.ntp}
+                          {format(contract.ntp, "MMM dd, yyyy")}
                         </p>
                       </div>
                     ) : null}
@@ -165,7 +165,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">NTP Receive Date</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.ntpRecieve}
+                          {format(contract.ntpRecieve, "MMM dd, yyyy")}
                         </p>
                       </div>
                     ) : null}
@@ -174,7 +174,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">Contract Date</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.contractDate}
+                          {format(contract.contractDate, "MMM dd, yyyy")}
                         </p>
                       </div>
                     ) : null}
