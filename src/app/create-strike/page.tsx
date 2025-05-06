@@ -187,11 +187,11 @@ const Create3Strike = () => {
         ...data,
         budget: formatNumber(data.budget),
         date: formatDate(data.date),
-        endUser: isGood ? "KATHERINE V. LADAGA" : "EDISON M. SALAZAR",
+        endUser: isGood ? "KATHERINE V. LADAGA" : "REINALD KELVIN S. SUPERIANO",
         endID: isGood ? "12 G 0106" : "86 G 0033",
         endDesignation: isGood
           ? "End User for Goods"
-          : "End-user for Construction / Maintenance and Consultancy Projects",
+          : "Provisional BAC Member",
       };
 
       // Generate Strike Document
