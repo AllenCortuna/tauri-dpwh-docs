@@ -35,26 +35,9 @@ export default function UploadXlsxPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* {menuItems.map((item, index) => (
-          <Link
-            href={item.href}
-            key={index}
-            className="flex justify-center items-center p-6"
-          >
-            <div className={`${item.color} rounded-lg p-6 shadow-md transition-all duration-300 transform hover:scale-105 w-full`}>
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-4">
-                  {item.icon}
-                </div>
-                <h2 className="text-xl font-semibold mb-2">{item.title}</h2>
-                <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-              </div>
-            </div>
-          </Link>
-        ))} */}
-        <ExportContractors />
+      <div className="flex flex-row justify-start items-start gap-40">
         <ExportContracts />
+        <ExportContractors />
       </div>
     </div>
   );

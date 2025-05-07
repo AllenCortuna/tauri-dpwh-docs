@@ -61,7 +61,7 @@ const ExportContractors: React.FC = () => {
 
   return (
     <button
-      className="bg-white rounded-lg my-auto p-6 shadow-md transition-all duration-300 transform hover:scale-105"
+      className="bg-white rounded-lg p-6 shadow-md transition-all duration-300 transform hover:scale-105"
       disabled={isLoading}
       onClick={handleExport}
     >
