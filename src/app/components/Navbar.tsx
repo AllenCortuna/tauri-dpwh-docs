@@ -5,11 +5,13 @@ import React, { useState } from "react";
 import dpwhLogo from "../../../public/dpwhLogo.png";
 import { useAuthStore } from "../../../config/authStore";
 import { useLogin } from "../../../config/useLogin";
+import useSelectDatabase from '../../../config/useSelectDatabase';
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated } = useAuthStore(); // Get auth state directly from store
   const { logout } = useLogin();
+  const { databaseType } = useSelectDatabase(); // Using Zustand store now
 
   return (
     <nav className="border-b-2 border-gray-300 shadow-sm">
@@ -24,7 +26,7 @@ export const Navbar = () => {
               height={30}
               className="object-contain"
             />
-            <span className="font-bold text-gray-800 tracking-wide">MODEO</span>
+            <span className="flex mt-1 font-bold text-xs text-gray-700 tracking-wide">MODEO {databaseType === "goods" ? "Goods and Services" : "Civil Works" }</span>
           </Link>
 
           {/* Desktop Menu */}

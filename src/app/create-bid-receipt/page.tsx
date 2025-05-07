@@ -6,6 +6,7 @@ import Docxtemplater from "docxtemplater";
 import { errorToast, successToast } from "../../../config/toast";
 import { formatDate } from "../../../config/convertToDate";
 import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface FormData {
   contractID: string;
@@ -36,6 +37,8 @@ interface Contract {
 }
 
 const CreateBidReceipt = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<FormData>({
     contractID: "",
@@ -69,10 +72,10 @@ const CreateBidReceipt = () => {
         });
         setContractors((contractorsResult as {rows: Contractor[]}).rows);
         
-        // Fetch contracts
+        // Fetch contracts with dynamic table name
         const contractsResult = await invoke('execute_mssql_query', {
           queryRequest: {
-            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            query: `SELECT id, contractID, projectName, batch FROM ${tableName}`,
             params: []
           }
         });
@@ -83,7 +86,7 @@ const CreateBidReceipt = () => {
     };
 
     fetchData();
-  }, []);
+  }, [tableName]); // Add tableName as dependency
 
   // Handle click outside contractor dropdown to close it
   useEffect(() => {

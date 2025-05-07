@@ -7,6 +7,7 @@ import ViewModal from "./ViewModal";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { invoke } from '@tauri-apps/api/core';
 import { format } from "date-fns";
+import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface Contract {
   id: number;
@@ -33,6 +34,8 @@ interface Contract {
 }
 
 const AdvancedSearch: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
@@ -57,7 +60,7 @@ const AdvancedSearch: React.FC = () => {
   // Modify handleSearch function to use MSSQL
   const handleSearch = async () => {
     try {
-      let query = `SELECT * FROM contracts WHERE year = ${selectedYear}`;
+      let query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear}`;
       const params = [selectedYear];
 
       if (contractor) {

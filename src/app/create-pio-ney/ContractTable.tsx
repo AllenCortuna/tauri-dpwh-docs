@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { Contract } from "./page";
-import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface ContractTableProps {
   inputArr: Contract[];
@@ -9,6 +10,8 @@ interface ContractTableProps {
 }
 
 const ContractTable: React.FC<ContractTableProps> = ({ inputArr, setInputArr }) => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   // State to manage form input data
   const [inputData, setInputData] = useState<Contract>({
     contractID: "",
@@ -25,18 +28,20 @@ const ContractTable: React.FC<ContractTableProps> = ({ inputArr, setInputArr }) 
   useEffect(() => {
     const fetchContracts = async () => {
       try {
-        const db = await Database.load("sqlite:tauri.db");
-        const contractsResult = await db.select<Contract[]>(
-          "SELECT id, contractID, projectName, batch FROM contracts"
-        );
-        setContracts(contractsResult);
+        const result = await invoke('execute_mssql_query', {
+          queryRequest: {
+            query: `SELECT id, contractID, projectName, batch FROM ${tableName}`,
+            params: []
+          }
+        });
+        setContracts((result as {rows: Contract[]}).rows);
       } catch (error) {
         console.error("Error fetching contracts:", error);
       }
     };
 
     fetchContracts();
-  }, []);
+  }, [tableName]);
 
   // Add click outside listener to close dropdown
   useEffect(() => {

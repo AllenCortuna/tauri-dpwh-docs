@@ -90,9 +90,9 @@ export default function Home() {
     },
     {
       icon: <FaDatabase className="w-6 h-6" />,
-      title: "Create Contracts",
-      subtitle: "Create contracts information",
-      href: "/sqlite",
+      title: "Settings",
+      subtitle: "Database settings",
+      href: "/settings",
     }
   ];
 

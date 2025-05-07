@@ -6,6 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { readDir } from "@tauri-apps/plugin-fs";
 import { FaCheck, FaPlus } from "react-icons/fa";
 import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface Contract {
   id: number;
@@ -17,6 +18,8 @@ interface Contract {
 }
 
 const Checklist: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -75,7 +78,7 @@ const Checklist: React.FC = () => {
         
         const result = await invoke('execute_mssql_query', {
           queryRequest: {
-            query: "SELECT contractID, projectName, status, year FROM contracts WHERE year = @p1 ORDER BY contractID",
+            query: `SELECT contractID, projectName, status, year FROM ${tableName} WHERE year = @p1 ORDER BY contractID`,
             params: [currentYear]
           }
         });
@@ -97,7 +100,8 @@ const Checklist: React.FC = () => {
     };
 
     fetchContracts();
-  }, [currentYear]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear, tableName]); // Add tableName as dependency
 
   const applyFilters = (contractsToFilter: Contract[]) => {
     let result = [...contractsToFilter];

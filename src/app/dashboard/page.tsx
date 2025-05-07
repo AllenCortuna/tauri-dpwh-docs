@@ -6,6 +6,7 @@ import NavLinks from "../components/ContractNav";
 import { error } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 import { Contractor } from "../../../config/interface";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface Contract {
   id: number;
@@ -29,6 +30,9 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
+  
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     totalContractors: 0,
@@ -57,7 +61,7 @@ const Dashboard: React.FC = () => {
         // Get total contracts
         const totalContractsResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: `SELECT * FROM contracts WHERE year = '${currentYear}'`
+            query: `SELECT * FROM ${tableName} WHERE year = '${currentYear}'`
           }
         });
         console.log('totalContractsResponse', totalContractsResponse)
@@ -72,27 +76,27 @@ const Dashboard: React.FC = () => {
         // Get awarded contracts for current year
         const awardedResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: `SELECT * FROM contracts WHERE status = 'awarded' AND year = '${currentYear}'`
+            query: `SELECT * FROM ${tableName} WHERE status = 'awarded' AND year = '${currentYear}'`
           }
         });
 
         // Get posted contracts for current year
         const postedResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: `SELECT * FROM contracts WHERE status = 'posted' AND year = '${currentYear}'`
+            query: `SELECT * FROM ${tableName} WHERE status = 'posted' AND year = '${currentYear}'`
           }
         });
 
         // Get proceed contracts for current year
         const proceedResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: `SELECT * FROM contracts WHERE status = 'proceed' AND year = '${currentYear}'`
+            query: `SELECT * FROM ${tableName} WHERE status = 'proceed' AND year = '${currentYear}'`
           }
         });
 
         const cancelledResponse = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: `SELECT * FROM contracts WHERE status = 'cancelled' AND year = '${currentYear}'`
+            query: `SELECT * FROM ${tableName} WHERE status = 'cancelled' AND year = '${currentYear}'`
           }
         });
 
@@ -100,7 +104,7 @@ const Dashboard: React.FC = () => {
         const postedListResponse = await invoke("execute_mssql_query", {
           queryRequest: {
             query: `SELECT id, contractID, projectName, contractor, status, bidding 
-                 FROM contracts 
+                 FROM ${tableName} 
                  WHERE status = 'posted' AND year = '${currentYear}' 
                  ORDER BY bidding DESC`
           }
@@ -109,7 +113,7 @@ const Dashboard: React.FC = () => {
         const awardedListResponse = await invoke("execute_mssql_query", {
           queryRequest: {
             query: `SELECT id, contractID, projectName, contractor, status, bidding, noa 
-                 FROM contracts 
+                 FROM ${tableName} 
                  WHERE status = 'awarded' AND year = '${currentYear}' 
                  ORDER BY noa DESC`
           }
@@ -118,7 +122,7 @@ const Dashboard: React.FC = () => {
         const proceedListResponse = await invoke("execute_mssql_query", {
           queryRequest: {
             query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
-                 FROM contracts 
+                 FROM ${tableName} 
                  WHERE status = 'proceed' AND year = '${currentYear}' 
                  ORDER BY ntp DESC`
           }
@@ -127,7 +131,7 @@ const Dashboard: React.FC = () => {
         const cancelledListResponse = await invoke("execute_mssql_query", {
           queryRequest: {
             query: `SELECT id, contractID, projectName, contractor, status, bidding, ntp 
-                 FROM contracts 
+                 FROM ${tableName} 
                  WHERE status = 'cancelled' AND year = '${currentYear}' 
                  ORDER BY ntp DESC`
           }
@@ -181,7 +185,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchDashboardStats();
-  }, [currentYear]);
+  }, [currentYear, tableName, databaseType]);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCurrentYear(e.target.value);
@@ -191,12 +195,15 @@ const Dashboard: React.FC = () => {
   const currentYearNum = new Date().getFullYear();
   const yearOptions = Array.from({ length: 6 }, (_, i) => currentYearNum - i);
 
+  // Get the appropriate title based on database type
+  const dashboardTitle = databaseType === 'goods' ? 'Goods and Services' : 'Civil Works';
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8 md:gap-x-20 gap-x-10">
         {/* Replaced with NavLinks component */}
         <NavLinks />
-        <h1 className="text-2xl font-bold text-gray-700"> {currentYear} Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-700">{dashboardTitle}</h1>
         <div className="flex items-center">
           <label htmlFor="year" className="mr-2 text-gray-700">
             Year:
@@ -225,7 +232,9 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {/* Total Contracts Card */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-              <h2 className="text-gray-500 text-sm mb-2">Total Contracts</h2>
+              <h2 className="text-gray-500 text-sm mb-2">
+                Total {databaseType === 'goods' ? 'Goods' : 'Contracts'}
+              </h2>
               <p className="text-[2rem] font-bold text-gray-700">
                 {stats.totalContracts}
               </p>
@@ -233,7 +242,9 @@ const Dashboard: React.FC = () => {
 
             {/* Total Contractors Card */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-              <h2 className="text-gray-500 text-sm mb-2">Total Contractors</h2>
+              <h2 className="text-gray-500 text-sm mb-2">
+                Total {databaseType === 'goods' ? 'Suppliers' : 'Contractors'}
+              </h2>
               <p className="text-[2rem] font-bold text-gray-700">
                 {stats.totalContractors}
               </p>
@@ -242,7 +253,7 @@ const Dashboard: React.FC = () => {
             {/* Current Year Stats */}
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 md:col-span-2 lg:col-span-1">
               <h2 className="text-gray-500 font-semibold text-sm mb-4">
-                {currentYear} Contract Status
+                {currentYear} {databaseType === 'goods' ? 'Goods' : 'Contract'} Status
               </h2>
               <div className="space-y-1">
                 <div className="flex justify-between items-center">

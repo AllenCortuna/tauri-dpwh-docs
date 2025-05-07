@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent} from "react";
 import { ToastContainer } from "react-toastify";
 import { errorToast, successToast } from "../../../../config/toast";
 import { invoke } from '@tauri-apps/api/core';
+import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface UpdateFormData {
   bidEvalStart: string;
@@ -17,6 +18,9 @@ interface UpdateFormData {
 }
 
 const UpdateMultipleContract: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
+  
   const [contractIDs, setContractIDs] = useState<string[]>([]);
   const [newContractID, setNewContractID] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -37,7 +41,7 @@ const UpdateMultipleContract: React.FC = () => {
     try {
       const result = await invoke('execute_mssql_query', {
         queryRequest: {
-          query: "SELECT COUNT(*) as count FROM contracts WHERE contractID = @p1",
+          query: `SELECT COUNT(*) as count FROM ${tableName} WHERE contractID = @p1`,
           params: [contractID.trim()]
         }
       });
@@ -65,7 +69,7 @@ const UpdateMultipleContract: React.FC = () => {
 
     const exists = await validateContractID(trimmedID);
     if (!exists) {
-      errorToast("Contract ID not found in database");
+      errorToast(`ID not found in ${databaseType === 'goods' ? 'goods' : 'contracts'} database`);
       return;
     }
 
@@ -139,7 +143,7 @@ const UpdateMultipleContract: React.FC = () => {
           const result = await invoke('execute_mssql_query', {
             queryRequest: {
               query: `
-                UPDATE contracts 
+                UPDATE ${tableName} 
                 SET ${updateFields.join(", ")}
                 WHERE contractID = @p${paramIndex}
               `,
@@ -150,38 +154,41 @@ const UpdateMultipleContract: React.FC = () => {
           if ((result as {rowsAffected: number}).rowsAffected > 0) {
           }
         } catch (error) {
-          console.error(`Error updating contract ${contractID}:`, error);
+          console.error(`Error updating ${databaseType === 'goods' ? 'goods' : 'contract'} ${contractID}:`, error);
         }
       }
 
-      successToast(`Successfully updated contracts`);
+      successToast(`Successfully updated ${databaseType === 'goods' ? 'goods' : 'contracts'}`);
 
-      // Reset form if all updates were successfu
-        setFormData({
-          bidEvalStart: "",
-          bidEvalEnd: "",
-          postQualStart: "",
-          postQualEnd: "",
-          reso: "",
-          noa: "",
-          ntp: "",
-          ntpRecieve: "",
-          contractDate: "",
-        });
-        setContractIDs([]);
+      // Reset form if all updates were successful
+      setFormData({
+        bidEvalStart: "",
+        bidEvalEnd: "",
+        postQualStart: "",
+        postQualEnd: "",
+        reso: "",
+        noa: "",
+        ntp: "",
+        ntpRecieve: "",
+        contractDate: "",
+      });
+      setContractIDs([]);
     } catch (error) {
-      console.error("Error updating contracts:", error);
-      errorToast("Failed to update contracts");
+      console.error(`Error updating ${databaseType === 'goods' ? 'goods' : 'contracts'}:`, error);
+      errorToast(`Failed to update ${databaseType === 'goods' ? 'goods' : 'contracts'}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Update page title based on database type
+  const pageTitle = databaseType === 'goods' ? 'Update Multiple Goods' : 'Update Multiple Contracts';
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <div className="w-full max-w-4xl space-y-6">
         <h1 className="text-2xl text-neutral font-bold text-center mb-8">
-          Update Multiple Contracts
+          {pageTitle}
         </h1>
 
         {/* Contract ID Input Section */}
@@ -191,7 +198,7 @@ const UpdateMultipleContract: React.FC = () => {
               type="text"
               value={newContractID}
               onChange={(e) => setNewContractID(e.target.value)}
-              placeholder="Enter Contract ID"
+              placeholder={`Enter ${databaseType === 'goods' ? 'Goods' : 'Contract'} ID`}
               className="flex-1 p-2 border rounded text-xs"
             />
             <button
@@ -345,7 +352,7 @@ const UpdateMultipleContract: React.FC = () => {
                   : "btn-neutral text-white"
               }`}
             >
-              {isLoading ? "Updating..." : "Update Contracts"}
+              {isLoading ? "Updating..." : `Update ${databaseType === 'goods' ? 'Goods' : 'Contracts'}`}
             </button>
           </div>
         </form>

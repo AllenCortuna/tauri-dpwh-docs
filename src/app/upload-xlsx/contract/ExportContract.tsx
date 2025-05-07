@@ -5,6 +5,7 @@ import { errorToast } from "../../../../config/toast";
 import { FiDownload } from "react-icons/fi";
 import { Contract } from "../../../../config/interface";
 import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface ExcelRow {
   "Batch No.": string;
@@ -28,6 +29,8 @@ interface ExcelRow {
 }
 
 const ExportContracts: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -50,7 +53,7 @@ const ExportContracts: React.FC = () => {
       try {
         const result = await invoke("execute_mssql_query", {
           queryRequest: {
-            query: "SELECT * FROM contracts",
+            query: `SELECT * FROM ${tableName}`,
             params: [],
           },
         });
@@ -63,7 +66,7 @@ const ExportContracts: React.FC = () => {
     };
 
     fetchContracts();
-  }, []);
+  }, [tableName]); // Add tableName as dependency
 
   // Filter contracts when year or status changes
   useEffect(() => {
@@ -126,18 +129,19 @@ const ExportContracts: React.FC = () => {
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-      // Add the worksheet to the workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Contracts");
+      // Add the worksheet to the workbook with dynamic name based on table
+      XLSX.utils.book_append_sheet(workbook, worksheet, databaseType === 'goods' ? 'Goods' : 'Contracts');
 
-      // Generate filename with filters
+      // Generate filename with filters and table type
       const yearPart = selectedYear !== "All" ? `_${selectedYear}` : "";
       const statusPart = selectedStatus !== "All" ? `_${selectedStatus}` : "";
-      const filename = `contracts${yearPart}${statusPart}.xlsx`;
+      const tableType = databaseType === 'goods' ? 'goods' : 'contracts';
+      const filename = `${tableType}${yearPart}${statusPart}.xlsx`;
 
       // Write the workbook to a file
       XLSX.writeFile(workbook, filename);
 
-      alert("Contracts exported successfully!");
+      alert(`${databaseType === 'goods' ? 'Goods' : 'Contracts'} exported successfully!`);
     } catch (error) {
       console.error("Failed to export contracts:", error);
       errorToast("Failed to export contracts.");

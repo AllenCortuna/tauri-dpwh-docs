@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Contract } from "./page";
 import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface ContractTableProps {
   inputArr: Contract[];
@@ -9,6 +10,9 @@ interface ContractTableProps {
 }
 
 const ContractTable: React.FC<ContractTableProps> = ({ inputArr, setInputArr }) => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
+  
   // State to manage form input data
   const [inputData, setInputData] = useState<Contract>({
     contractID: "",
@@ -27,7 +31,7 @@ const ContractTable: React.FC<ContractTableProps> = ({ inputArr, setInputArr }) 
       try {
         const result = await invoke('execute_mssql_query', {
           queryRequest: {
-            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            query: `SELECT id, contractID, projectName, batch FROM ${tableName}`,
             params: []
           }
         });
@@ -40,7 +44,7 @@ const ContractTable: React.FC<ContractTableProps> = ({ inputArr, setInputArr }) 
     };
 
     fetchContracts();
-  }, []);
+  }, [tableName]); // Add databaseType as dependency
 
   // Add click outside listener to close dropdown
   useEffect(() => {

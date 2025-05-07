@@ -8,6 +8,7 @@ import EditModal from "./EditModal";
 import { invoke } from '@tauri-apps/api/core';
 import { ask } from '@tauri-apps/plugin-dialog';
 import { format } from "date-fns";
+import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface Contract {
   id: number;
@@ -34,6 +35,8 @@ interface Contract {
 }
 
 const SearchContracts: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   // Add new state for year filter
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   
@@ -53,7 +56,7 @@ const SearchContracts: React.FC = () => {
     try {
       const result :{rows: Contract[]} = await invoke("execute_mssql_query", {
         queryRequest: {
-          query:  `SELECT * FROM contracts WHERE year = ${selectedYear}`
+          query:  `SELECT * FROM ${tableName} WHERE year = ${selectedYear}`
         }
       });
       setContracts(result.rows);
@@ -76,20 +79,20 @@ const SearchContracts: React.FC = () => {
 
       switch (searchType) {
         case "batch":
-          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND batch LIKE ${searchQuery}`;
+          query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear} AND batch LIKE ${searchQuery}`;
           break;
         case "contractID":
           console.log('searchQuery', searchQuery)
-          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND contractID = '${searchQuery}'`;
+          query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear} AND contractID = '${searchQuery}'`;
           break;
         case "bidding":
-          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND bidding LIKE '${searchQuery}'`;
+          query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear} AND bidding LIKE '${searchQuery}'`;
           break;
         case "projectName":
-          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND projectName LIKE '%${searchQuery}'`;
+          query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear} AND projectName LIKE '%${searchQuery}'`;
           break;
         case "contractor":
-          query = `SELECT * FROM contracts WHERE year = ${selectedYear} AND contractor LIKE '%${searchQuery}%'`;
+          query = `SELECT * FROM ${tableName} WHERE year = ${selectedYear} AND contractor LIKE '%${searchQuery}%'`;
           break;
         default:
           query += `1=1`;
@@ -142,7 +145,7 @@ const SearchContracts: React.FC = () => {
         status = "proceed";
       } 
 
-      const query = `UPDATE contracts SET 
+      const query = `UPDATE ${tableName} SET 
         batch = @p1,
         year = @p2,
         posting = @p3,
@@ -214,7 +217,7 @@ const SearchContracts: React.FC = () => {
       if (!confirmed) {
         return;
       }
-      const query = `DELETE FROM contracts WHERE contractID = @p1`;
+      const query = `DELETE FROM ${tableName} WHERE contractID = @p1`;
       await invoke("execute_mssql_query", {
         queryRequest: {
           query,
@@ -241,7 +244,7 @@ const SearchContracts: React.FC = () => {
       if (!confirmed) {
         return;
       }
-      const query = `UPDATE contracts SET status = 'cancelled' WHERE contractID = @p1`;
+      const query = `UPDATE ${tableName} SET status = 'cancelled' WHERE contractID = @p1`;
       await invoke("execute_mssql_query", {
         queryRequest: {
           query,

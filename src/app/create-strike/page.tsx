@@ -9,6 +9,7 @@ import { errorToast, successToast } from "../../../config/toast";
 import { formatNumber } from "../../../config/formatNumber";
 import { formatDate } from "../../../config/convertToDate";
 import { invoke } from "@tauri-apps/api/core";
+import useSelectDatabase from "../../../config/useSelectDatabase";
 
 interface Bidder {
   name: string;
@@ -50,6 +51,8 @@ interface Contract {
 }
 
 const Create3Strike = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [isLoading, setIsLoading] = useState(false);
   const [inputArr, setInputArr] = useState<Bidder[]>([]);
   const [data, setData] = useState<FormData>({
@@ -67,9 +70,10 @@ const Create3Strike = () => {
   useEffect(() => {
     const fetchContracts = async () => {
       try {
+  
         const result = await invoke('execute_mssql_query', {
           queryRequest: {
-            query: "SELECT id, contractID, projectName, batch FROM contracts",
+            query: `SELECT id, contractID, projectName, batch FROM ${tableName}`,
             params: []
           }
         });
@@ -82,7 +86,7 @@ const Create3Strike = () => {
     };
 
     fetchContracts();
-  }, []);
+  }, [tableName]); // Add data.category as dependency
 
   const options = [
     { value: "Infrastructure", label: "Infrastructure" },
@@ -117,8 +121,10 @@ const Create3Strike = () => {
   const handleSelect = (selectedOption: SelectOption) => {
     setData((prevData) => ({
       ...prevData,
-      category: selectedOption ? selectedOption.value : "",
+      category: selectedOption ? selectedOption.value : ""
     }));
+    setFilteredContracts([]);
+    setShowContractDropdown(false);
   };
 
 

@@ -3,6 +3,7 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import { ToastContainer } from "react-toastify";
 import { errorToast, successToast } from "../../../../config/toast";
 import { invoke } from '@tauri-apps/api/core';
+import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface Contract {
   contractID: string;
@@ -21,6 +22,8 @@ interface Contract {
 }
 
 const CreateContracts: React.FC = () => {
+  const { databaseType } = useSelectDatabase();
+  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [data, setData] = useState<{
     batch: string;
@@ -69,7 +72,7 @@ const CreateContracts: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (Object.values(data).some((value) => value === "")) {
+    if (Object.values(data).some((value) => value === "") && tableName !== 'goods') {
       errorToast("Please fill in all fields.");
       return;
     }
@@ -94,7 +97,7 @@ const CreateContracts: React.FC = () => {
         // Check if the contract already exists
         const existingContract = await invoke('execute_mssql_query', {
           queryRequest: {
-            query: "SELECT * FROM contracts WHERE contractID = @p1",
+            query: `SELECT * FROM ${tableName} WHERE contractID = @p1`,
             params: [contract.contractID]
           }
         });
@@ -107,7 +110,7 @@ const CreateContracts: React.FC = () => {
         // Insert the new contract
         await invoke('execute_mssql_query', {
           queryRequest: {
-            query: `INSERT INTO contracts (
+            query: `INSERT INTO ${tableName} (
               batch, year, posting, preBid, bidding, contractID, projectName, status
             ) VALUES (
               @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8
