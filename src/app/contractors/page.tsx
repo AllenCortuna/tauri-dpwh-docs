@@ -15,7 +15,6 @@ import {
   ChartOptions,
 } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-import { format } from "date-fns";
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -113,7 +112,7 @@ const ContractorsDashboard: React.FC = () => {
       const recentContractorsResult = await invoke("execute_mssql_query", {
         queryRequest: {
           query:
-            "SELECT TOP 5 id, contractorName, email, amo, designation, tin, address, CONVERT(NVARCHAR, lastUpdated, 120) as lastUpdated FROM contractors ORDER BY lastUpdated DESC",
+            "SELECT TOP 5 id, contractorName, email, amo, designation, tin, address, FORMAT(CAST(lastUpdated AS DATETIME), 'MMMM d yyyy h:mmtt') AS lastUpdated FROM contractors ORDER BY lastUpdated DESC",
         },
       });
       console.log("recentContractorsResult", recentContractorsResult);
@@ -134,6 +133,7 @@ const ContractorsDashboard: React.FC = () => {
       setRecentContractors(
         (recentContractorsResult as { rows: Contractor[] }).rows || []
       );
+      console.log("recentContractorsResult", recentContractorsResult);
     } catch (error) {
       console.error("Error fetching contractor stats:", error);
       toast.error("Failed to fetch contractor statistics");
@@ -301,9 +301,7 @@ const ContractorsDashboard: React.FC = () => {
                         {contractor.amo}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {contractor.lastUpdated 
-                          ? format(new Date(contractor.lastUpdated), "MMM d, yyyy")
-                          : ""}
+                        {contractor.lastUpdated ? contractor.lastUpdated : ""}
                       </td>
                     </tr>
                   ))}
