@@ -2,7 +2,7 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { ToastContainer } from "react-toastify";
 import { errorToast, successToast } from "../../../../config/toast";
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 import useSelectDatabase from "../../../../config/useSelectDatabase";
 
 interface Contract {
@@ -23,7 +23,7 @@ interface Contract {
 
 const CreateContracts: React.FC = () => {
   const { databaseType } = useSelectDatabase();
-  const tableName = databaseType === 'goods' ? 'goods' : 'contracts';
+  const tableName = databaseType === "goods" ? "goods" : "contracts";
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [data, setData] = useState<{
     batch: string;
@@ -72,7 +72,10 @@ const CreateContracts: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (Object.values(data).some((value) => value === "") && tableName !== 'goods') {
+    if (
+      Object.values(data).some((value) => value === "") &&
+      tableName !== "goods"
+    ) {
       errorToast("Please fill in all fields.");
       return;
     }
@@ -91,24 +94,44 @@ const CreateContracts: React.FC = () => {
       return;
     }
 
+    //check if the contracts ids contains letters g or r or G or R
+    if (
+      contracts.some((contract) => /[grGR]/.test(contract.contractID)) &&
+      tableName !== "goods"
+    ) {
+      errorToast("Hindi INFRA yung contract ID.");
+      errorToast("Please swith the database to Goods.");
+      return;
+    }
+
+    //check if the contracts ids contains letters ONLY EB or eb
+    if (
+      !contracts.some((contract) => /[grGR]/.test(contract.contractID)) &&
+      tableName === "goods"
+    ) {
+      errorToast("Hindi GOODS yung contract ID.");
+      errorToast("Please swith the database to Infra.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       for (const contract of contracts) {
         // Check if the contract already exists
-        const existingContract = await invoke('execute_mssql_query', {
+        const existingContract = await invoke("execute_mssql_query", {
           queryRequest: {
             query: `SELECT * FROM ${tableName} WHERE contractID = @p1`,
-            params: [contract.contractID]
-          }
+            params: [contract.contractID],
+          },
         });
 
-        if ((existingContract as {rows: Contract[]}).rows.length > 0) {
+        if ((existingContract as { rows: Contract[] }).rows.length > 0) {
           errorToast(`Contract with ID ${contract.contractID} already exists.`);
           return;
         }
 
         // Insert the new contract
-        await invoke('execute_mssql_query', {
+        await invoke("execute_mssql_query", {
           queryRequest: {
             query: `INSERT INTO ${tableName} (
               batch, year, posting, preBid, bidding, contractID, projectName, status
@@ -123,9 +146,9 @@ const CreateContracts: React.FC = () => {
               data.bidding,
               contract.contractID,
               contract.projectName,
-              "posted"
-            ]
-          }
+              "posted",
+            ],
+          },
         });
       }
 

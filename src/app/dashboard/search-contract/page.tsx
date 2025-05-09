@@ -74,7 +74,7 @@ const AdvancedSearch: React.FC = () => {
       }
 
       if (searchProjectName) {
-        query += ` AND projectName LIKE '${searchProjectName}%'`;
+        query += ` AND projectName LIKE '%${searchProjectName}%'`;
         params.push(`%${searchProjectName}%`);
       }
 
