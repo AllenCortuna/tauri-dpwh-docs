@@ -33,6 +33,7 @@ interface DocumentData {
   day?: string;
   month?: string;
   table: Contract[];
+  year?: number;
 }
 
 interface SelectOption {
@@ -179,6 +180,7 @@ const Folder: React.FC = () => {
               month: "long",
             }),
             table: inputArr,
+            year: new Date(data.certDate).getFullYear()
           },
           `CERT ${inputArr
             .slice(0, 5)
