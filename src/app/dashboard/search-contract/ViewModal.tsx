@@ -86,7 +86,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
 
               {/* Bid Evaluation Section */}
               <div className="mb-2">
-                <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="mb-20 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {contract.bidEvalStart && contract.bidEvalEnd ? (
                     <div className="block">
                       <span className="font-medium text-gray-700">
@@ -95,13 +95,13 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <span className="text-xs text-gray-600">From:</span>
-                          <p className="mt-1 p-2 w-full">
+                          <p className="mt-1 w-full text-lg font-bold text-neutral">
                             {format(contract.bidEvalStart, "MMM dd, yyyy")}
                           </p>
                         </div>
                         <div>
                           <span className="text-xs text-gray-600">To:</span>
-                          <p className="mt-1 p-2 w-full">
+                          <p className="mt-1 w-full text-lg font-bold text-neutral">
                             {format(contract.bidEvalEnd, "MMM dd, yyyy")}
                           </p>
                         </div>
@@ -116,13 +116,13 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <span className="text-xs text-gray-600">From:</span>
-                          <p className="mt-1 p-2 w-full">
+                          <p className="mt-1 w-full text-lg font-bold text-neutral">
                             {format(contract.postQualStart, "MMM dd, yyyy")}
                           </p>
                         </div>
                         <div>
                           <span className="text-xs text-gray-600">To:</span>
-                          <p className="mt-1 p-2 w-full">
+                          <p className="mt-1 w-full text-lg font-bold text-neutral">
                             {format(contract.postQualEnd, "MMM dd, yyyy")}
                           </p>
                         </div>
@@ -183,7 +183,14 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, contract }) => {
                       <div className="block">
                         <span className="text-gray-500">Contract Amount</span>
                         <p className="mt-1 w-full text-lg font-bold text-neutral">
-                          {contract.contractAmount}
+                          {contract.contractAmount &&
+                            Number(contract.contractAmount).toLocaleString(
+                              "en-US",
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )}
                         </p>
                       </div>
                     ) : null}

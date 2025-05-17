@@ -15,12 +15,17 @@ import {
   FaPen,
   FaBookmark,
 } from "react-icons/fa";
-import { MdSpaceDashboard } from "react-icons/md";
+import { IoSettingsSharp } from "react-icons/io5";
+import { MdSpaceDashboard } from "react-icons/md"; // Removed MdToggleOn, MdToggleOff
 import { RiAddCircleFill } from "react-icons/ri";
-import useShowFab from '../../config/useShowFab';
+import useShowFab from "../../config/useShowFab";
+import useShowDashboard from "../../config/useShowDashboard";
+import InfraDashboard from "./components/InfraDashboard";
 
 export default function Home() {
   const { showFab } = useShowFab();
+  const { showDashboard } = useShowDashboard(); // Removed toggleDashboard
+
   const menuItems = [
     {
       icon: <MdSpaceDashboard className="w-6 h-6" />,
@@ -97,8 +102,33 @@ export default function Home() {
   ];
 
   return (
-    <div className="h-full mdmt-20 p-8">
-      {showFab && (
+    <div className="h-full p-8">
+      {showDashboard && <InfraDashboard />}
+      {!showDashboard && (
+        <div className="w-full mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {menuItems.map((item, index) => (
+              <Link href={item.href} key={index}>
+                <div className="group bg-gray-50 rounded-xl p-4 border-2 border-gray-50 hover:border-orange-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-lg bg-gray-50 group-hover:shadow group-hover:bg-blue-50 text-gray-600 group-hover:text-orange-600">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h2 className="font-semibold text-gray-800 group-hover:text-orange-600">
+                        {item.title}
+                      </h2>
+                      <p className="text-xs text-gray-500">{item.subtitle}</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showFab || showDashboard ? (
         <div className="fixed bottom-5 right-5 flex flex-col gap-5">
           <Link
             href="/dashboard/create-contract"
@@ -128,29 +158,15 @@ export default function Home() {
           >
             <FaUsers className="w-5 h-5" />
           </Link>
+          <Link
+            href="/settings"
+            className="p-3 rounded-lg bg-gray-50 shadow hover:bg-blue-50 text-gray-600 hover:text-orange-600 tooltip tooltip-left"
+            data-tip="Settings"
+          >
+            <IoSettingsSharp className="w-5 h-5" />
+          </Link>
         </div>
-      )}
-      <div className="w-full mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {menuItems.map((item, index) => (
-            <Link href={item.href} key={index}>
-              <div className="group bg-gray-50 rounded-xl p-4 border-2 border-gray-50 hover:border-orange-600 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-gray-50 group-hover:shadow group-hover:bg-blue-50 text-gray-600 group-hover:text-orange-600">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-800 group-hover:text-orange-600">
-                      {item.title}
-                    </h2>
-                    <p className="text-xs text-gray-500">{item.subtitle}</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      ): null}
     </div>
   );
 }
