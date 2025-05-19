@@ -20,7 +20,7 @@ pub struct QueryResult {
 pub async fn execute_mssql_query(query_request: QueryRequest) -> Result<QueryResult, String> {
     // Create connection configuration
     let mut config = Config::new();
-    config.host("DESKTOP-16NDUR5");
+    config.host("DESKTOP-SJIHHGM");
     config.port(1433);
     config.database("infra");
     config.authentication(AuthMethod::sql_server("tsa", "12345678"));
